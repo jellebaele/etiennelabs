@@ -144,7 +144,7 @@ This method is "tailored" because the SQL changes depending on what you are tryi
 - **Scenario: Inventory Management:**
   The goal is to prevent overselling. The "tailored" logic is: Only subtract if the result is zero or higher.
 
-  ```SQL
+  ```sql
   -- The logic is embedded in the command
   UPDATE products
   SET stock = stock - 1
@@ -154,7 +154,7 @@ This method is "tailored" because the SQL changes depending on what you are tryi
 - **Scenario: Email Uniqueness**
   The goal is to prevent duplicate registrations. The "tailored" logic is a Unique Constraint at the database schema level.
 
-  ```SQL
+  ```sql
   -- The DB handles the race condition internally
   ALTER TABLE users ADD CONSTRAINT unique_email UNIQUE (email);
   ```
@@ -162,7 +162,7 @@ This method is "tailored" because the SQL changes depending on what you are tryi
 - **Scenario: Account Balance**
   The goal is to prevent an overdraft. The "tailored" logic is: Only withdraw if the balance covers the amount.
 
-  ```SQL
+  ```sql
   UPDATE accounts
   SET balance = balance - 50
   WHERE user_id = 101 AND balance >= 50;

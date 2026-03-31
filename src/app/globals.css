@@ -154,6 +154,12 @@
   .font-mono {
     font-family: var(--font-mono);
   }
+
+  .prose pre {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }
 
 @layer components {
