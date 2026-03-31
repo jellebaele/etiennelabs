@@ -1,6 +1,8 @@
 import { getAllArticles, getArticleBySlug } from '@/lib/articles';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import rehypePrism from 'rehype-prism-plus';
+import rehypeRaw from 'rehype-raw';
 
 export async function generateStaticParams() {
   const articles = getAllArticles();
@@ -42,7 +44,7 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
         </div>
       </section>
       <div className='prose max-w-none'>
-        <ReactMarkdown>{article.content}</ReactMarkdown>
+        <ReactMarkdown rehypePlugins={[rehypeRaw, rehypePrism]}>{article.content}</ReactMarkdown>
       </div>
     </article>
   );
