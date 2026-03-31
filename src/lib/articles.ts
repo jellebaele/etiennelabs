@@ -46,25 +46,34 @@ export function getAllArticles(): Article[] {
     })
     .filter((article): article is Article => article !== null);
 
-  console.log(articles);
-
   return articles.sort((a, b) => (a.meta.date > b.meta.date ? -1 : 1));
 }
 
 export function getArticleBySlug(slug: string): Article {
-  const raw = fs.readFileSync(path.join(ARTICLES_DIR, `${slug}.md`), 'utf-8');
-  const { data, content } = matter(raw);
+  const filePath = path.join(ARTICLES_DIR, `${slug}.md`);
+  const folderPath = path.join(ARTICLES_DIR, slug);
 
-  return {
-    meta: {
-      slug,
-      title: data.title,
-      date: data.date,
-      tags: Array.isArray(data.tags) ? data.tags : [],
-      excerpt: data.excerpt ?? '',
-    },
-    content,
-  };
+  if (fs.existsSync(filePath)) {
+    const raw = fs.readFileSync(path.join(ARTICLES_DIR, `${slug}.md`), 'utf-8');
+    const { data, content } = matter(raw);
+
+    return {
+      meta: {
+        slug,
+        title: data.title,
+        date: data.date,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        excerpt: data.excerpt ?? '',
+      },
+      content,
+    };
+  }
+
+  if (fs.existsSync(folderPath) && fs.statSync(folderPath).isDirectory()) {
+    return getFolderArticle(slug, slug);
+  }
+
+  throw new Error(`Article not found: ${slug}`);
 }
 
 export function getFolderArticle(folderName: string, slug: string): Article {
@@ -106,8 +115,6 @@ export function getFolderArticle(folderName: string, slug: string): Article {
 
 function getConfig(folderName: string): FolderConfig {
   const configPath = path.join(ARTICLES_DIR, folderName, '_category_.json');
-  console.log('CONFIG PATHHHH');
-  console.log(configPath);
 
   if (!fs.existsSync(configPath))
     throw new Error(`No '_category_.json' file found for article folder ${folderName}.`);
