@@ -4,6 +4,11 @@ import path from 'path';
 
 const ARTICLES_DIR = path.join(process.cwd(), 'content/articles');
 
+export type Article = {
+  meta: ArticleMeta;
+  content: string;
+};
+
 export type ArticleMeta = {
   slug: string;
   title: string;
@@ -12,37 +17,39 @@ export type ArticleMeta = {
   excerpt: string;
 };
 
-export function getAllArticles(): ArticleMeta[] {
-  const files = fs.readdirSync(ARTICLES_DIR);
+export function getAllArticles(): Article[] {
+  const items = fs.readdirSync(ARTICLES_DIR);
 
-  return files
-    .filter((f) => f.endsWith('.md'))
-    .map((filename) => {
-      const slug = filename.replace('.md', '');
-      const raw = fs.readFileSync(path.join(ARTICLES_DIR, filename), 'utf-8');
-      const { data } = matter(raw);
+  const articles = items
+    .map((itemName) => {
+      const fullPath = path.join(ARTICLES_DIR, itemName);
+      const stats = fs.statSync(fullPath);
 
-      return {
-        slug,
-        title: data.title,
-        date: data.date,
-        tags: Array.isArray(data.tags) ? data.tags : [],
-        excerpt: data.excerpt ?? '',
-      };
+      if (stats.isFile() && itemName.endsWith('.md')) {
+        const slug = itemName.replace('.md', '');
+        return getArticleBySlug(slug);
+      } else {
+        return null;
+      }
     })
-    .sort((a, b) => (a.date > b.date ? -1 : 1));
+    .filter((article): article is Article => article !== null);
+
+  return articles.sort((a, b) => (a.meta.date > b.meta.date ? -1 : 1));
 }
 
-export function getArticleBySlug(slug: string): ArticleMeta & { content: string } {
+export function getArticleBySlug(slug: string): Article {
   const raw = fs.readFileSync(path.join(ARTICLES_DIR, `${slug}.md`), 'utf-8');
   const { data, content } = matter(raw);
 
   return {
-    slug,
-    title: data.title,
-    date: data.date,
-    tags: Array.isArray(data.tags) ? data.tags : [],
-    excerpt: data.excerpt ?? '',
+    meta: {
+      slug,
+      title: data.title,
+      date: data.date,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      excerpt: data.excerpt ?? '',
+    },
+
     content,
   };
 }

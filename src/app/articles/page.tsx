@@ -3,7 +3,6 @@ import { getAllArticles } from '@/lib/articles';
 
 const ArticlesPages = () => {
   const articles = getAllArticles();
-  console.log(articles);
 
   return (
     <section className='py-16'>

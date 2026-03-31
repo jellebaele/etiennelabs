@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export async function generateStaticParams() {
   const articles = getAllArticles();
-  return articles.map((article) => ({ slug: article.slug }));
+  return articles.map((article) => ({ slug: article.meta.slug }));
 }
 
 type ArticlePageProps = {
@@ -27,7 +27,7 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
         </Link>
 
         <div className='flex items-center justify-start gap-2'>
-          {article.tags.map((tag, index) => (
+          {article.meta.tags.map((tag, index) => (
             <span
               key={index}
               className='tag-pill mb-4 block w-fit'>
@@ -37,12 +37,12 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
         </div>
 
         <h1 className='text-4xl md:text-6xl font-bold leading-[0.95] tracking-tight mt-4'>
-          {article.title}
+          {article.meta.title}
         </h1>
 
         <div className='flex items-center gap-4 mt-6'>
           <time className='font-mono text-xs uppercase tracking-wider text-muted-foreground'>
-            {article.date}
+            {article.meta.date}
           </time>
           <div className='w-2 h-2 bg-primary rounded-full' />
           <span className='font-mono text-xs uppercase tracking-wider text-muted-foreground'>
