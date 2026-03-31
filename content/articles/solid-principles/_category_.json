@@ -1,5 +1,6 @@
 {
-  "label": "SOLID principles",
-  "description": "SOLID is a set of five object-oriented design principles that help make software maintainable, extensible, and loosely coupled.",
-  "date": "2026-01-15"
+  "title": "SOLID principles",
+  "date": "2026-01-16",
+  "tags": ["General"],
+  "excerpt": "SOLID is a set of five object-oriented design principles that help make software maintainable, extensible, and loosely coupled."
 }
