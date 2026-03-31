@@ -1,7 +1,7 @@
 ---
 title: 'Database Race Conditions'
 date: '2026-01-15'
-tag: 'backend'
+tags: ['Backend', '.Net']
 excerpt: 'A deep dive into race conditions...'
 ---
 

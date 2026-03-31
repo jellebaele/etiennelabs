@@ -19,7 +19,16 @@ const ArticlesPages = () => {
             href={`/articles/${article.slug}`}
             className='group block retro-border retro-shadow p-6 hover:-translate-y-0.5 transition-transform'>
             <div className='flex items-center justify-between mb-3'>
-              <span className='tag-pill'>{article.tag}</span>
+              <div className='flex items-center justify-start gap-2'>
+                {article.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className='tag-pill'>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
               <span className='text-xs font-mono text-muted-foreground'>{article.date}</span>
             </div>
             <h2 className='text-xl font-bold mb-2 group-hover:text-primary transition-colors'>

@@ -26,7 +26,16 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
           ← Back to articles
         </Link>
 
-        <span className='tag-pill mb-4 block w-fit'>{article.tag}</span>
+        <div className='flex items-center justify-start gap-2'>
+          {article.tags.map((tag, index) => (
+            <span
+              key={index}
+              className='tag-pill mb-4 block w-fit'>
+              {tag}
+            </span>
+          ))}
+        </div>
+
         <h1 className='text-4xl md:text-6xl font-bold leading-[0.95] tracking-tight mt-4'>
           {article.title}
         </h1>

@@ -8,7 +8,7 @@ export type ArticleMeta = {
   slug: string;
   title: string;
   date: string;
-  tag: string;
+  tags: string[];
   excerpt: string;
 };
 
@@ -26,7 +26,7 @@ export function getAllArticles(): ArticleMeta[] {
         slug,
         title: data.title,
         date: data.date,
-        tag: data.tag ?? '',
+        tags: Array.isArray(data.tags) ? data.tags : [],
         excerpt: data.excerpt ?? '',
       };
     })
@@ -41,7 +41,7 @@ export function getArticleBySlug(slug: string): ArticleMeta & { content: string 
     slug,
     title: data.title,
     date: data.date,
-    tag: data.tag ?? '',
+    tags: Array.isArray(data.tags) ? data.tags : [],
     excerpt: data.excerpt ?? '',
     content,
   };
