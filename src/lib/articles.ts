@@ -10,6 +10,7 @@ export type ArticleMeta = {
   date: string;
   tags: string[];
   excerpt: string;
+  position?: number;
 };
 
 export type Article = {
@@ -95,10 +96,12 @@ export function getFolderArticle(folderName: string, slug: string): Article {
           date: data.date || config.date,
           tags: data.tags || config.tags,
           excerpt: data.excerpt ?? '',
+          position: data.position ?? 999,
         },
         content,
       };
-    });
+    })
+    .sort((a, b) => a.meta.position - b.meta.position);
 
   return {
     meta: {
