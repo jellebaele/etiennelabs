@@ -4,6 +4,7 @@
 @import url('@fontsource/space-grotesk/700.css');
 @import url('@fontsource/jetbrains-mono/400.css');
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 
 @theme {
   --font-display: 'Space Grotesk', sans-serif;
