@@ -45,6 +45,7 @@ const HeroSection = () => {
                 className='w-full h-100 object-cover'
                 width={900}
                 height={300}
+                priority
               />
             </div>
             {/* Decorative elements */}
