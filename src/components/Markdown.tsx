@@ -1,6 +1,5 @@
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { dracula } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
 
@@ -29,7 +28,14 @@ const Markdown = ({ children }: MarkdownProps) => {
           }
           return (
             <code
-              className={className}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.80em',
+                backgroundColor: 'hsl(var(--muted))',
+                padding: '0.2em 0.4em',
+                borderRadius: '0.25rem',
+                color: 'hsl(var(--primary))',
+              }}
               {...props}>
               {children}
             </code>

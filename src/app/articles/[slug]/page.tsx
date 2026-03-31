@@ -18,7 +18,7 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
   const article = getArticleBySlug(slug);
 
   return (
-    <article>
+    <article className='pb-20'>
       <section className='container py-4 md:py-8 mb-10'>
         <Link
           href='/articles'

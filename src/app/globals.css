@@ -160,6 +160,11 @@
     padding: 0 !important;
     margin: 0 !important;
   }
+
+  .prose :where(code):not(:where([class~='not-prose'] *))::before,
+  .prose :where(code):not(:where([class~='not-prose'] *))::after {
+    content: '' !important;
+  }
 }
 
 @layer components {
