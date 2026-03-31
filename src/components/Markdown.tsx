@@ -5,9 +5,10 @@ import remarkGfm from 'remark-gfm';
 
 type MarkdownProps = {
   children: string;
+  showLineNumers?: boolean;
 };
 
-const Markdown = ({ children }: MarkdownProps) => {
+const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -18,7 +19,7 @@ const Markdown = ({ children }: MarkdownProps) => {
             return (
               <SyntaxHighlighter
                 language={match[1]}
-                showLineNumbers
+                showLineNumbers={showLineNumers}
                 wrapLongLines
                 PreTag='div'
                 style={oneLight as any}>

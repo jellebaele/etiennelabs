@@ -1,11 +1,9 @@
 ---
 title: 'I - Interface Seggregation Principle'
-sidebar_position: 5
+position: 4
 ---
 
-# I - Interface Seggregation Principle
-
-## Definition
+# Definition
 
 **Note:** Seggregation also means _seperation_ in this context.
 
@@ -29,7 +27,7 @@ You split it into smaller ones:
 
 Classes implement only what they need.
 
-## Example
+# Example
 
 ```cs
 public interface IMachine
@@ -122,7 +120,7 @@ Console.WriteLine("Printing...");
 }
 ```
 
-## Liskov Substition Principle vs. Interface Seggregation Principle
+# Liskov Substition Principle vs. Interface Seggregation Principle
 
 In Liskov Substition Principle:
 

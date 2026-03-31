@@ -1,17 +1,15 @@
 ---
 title: 'L - Liskov Substition Principle'
-sidebar_position: 4
+position: 3
 ---
 
-# L - Liskov Substition Principle
-
-## Defintion
+# Defintion
 
 The Liskov Substitution Principle (LSP) states that subtypes must be replaceable for their base types without breaking behavior.
 
 **Meaning:** if a class inherits from another, it should not break the expected behavior.
 
-## Example
+# Example
 
 Suppose we have a storage abstraction.
 

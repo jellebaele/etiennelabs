@@ -1,17 +1,15 @@
 ---
-sidebar_position: 3
+position: 2
 title: 'O - Open/Closed Principle'
 ---
 
-# O - Open/Closed Principle
-
-## Defintion
+# Defintion
 
 The Open/Closed Principle (OCP) states that software entities should be **open** for extension but **closed** for modification.
 
 **Meaning:** you should add new behavior without changing existing code.
 
-## Example
+# Example
 
 Instead of modifying a PaymentProcessor every time you add a new payment type, you use an interface:
 
