@@ -7,7 +7,7 @@ type ArticleHeaderProps = {
 
 const ArticleHeader = ({ article }: ArticleHeaderProps) => {
   return (
-    <section className='container py-4 md:py-8 mb-10'>
+    <section className='container py-4 md:py-8'>
       <Link
         href='/articles'
         className='font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors inline-block mb-8'>
