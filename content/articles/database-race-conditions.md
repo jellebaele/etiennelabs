@@ -268,6 +268,8 @@ catch (Exception)
 }
 ```
 
+## Overview
+
 | **Feature**        | **Optimistic (RowVersion)**             | **Pessimistic (Transaction)**                    |
 | ------------------ | --------------------------------------- | ------------------------------------------------ |
 | **Code Style**     | Clean, uses standard `SaveChangesAsync` | Requires Raw SQL and explicit `BeginTransaction` |
