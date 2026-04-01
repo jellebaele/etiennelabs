@@ -142,6 +142,7 @@
   html {
     @apply font-sans;
     overflow-y: scroll;
+    scroll-behavior: smooth;
   }
 }
 
@@ -179,6 +180,16 @@
   .prose :where(code):not(:where([class~='not-prose'] *))::before,
   .prose :where(code):not(:where([class~='not-prose'] *))::after {
     content: '' !important;
+  }
+
+  .subtle-anchor {
+    @apply ml-2 opacity-0 transition-opacity no-underline! text-primary!;
+  }
+
+  h1:hover .subtle-anchor,
+  h2:hover .subtle-anchor,
+  h3:hover .subtle-anchor {
+    @apply opacity-100;
   }
 }
 

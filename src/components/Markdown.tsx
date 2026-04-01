@@ -1,7 +1,9 @@
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeRaw from 'rehype-raw';
+import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
 type MarkdownProps = {
@@ -14,7 +16,26 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
     <div className='prose max-w-none'>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        rehypePlugins={[
+          rehypeRaw,
+          rehypeSlug,
+          [
+            rehypeAutolinkHeadings,
+            {
+              behavior: 'append',
+              properties: {
+                className: ['subtle-anchor'],
+                ariaLabel: 'Link to section',
+              },
+              content: {
+                type: 'element',
+                tagName: 'span',
+                properties: { className: ['icon-link'] },
+                children: [{ type: 'text', value: '#' }], // Or use a Lucide icon string
+              },
+            },
+          ],
+        ]}
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
