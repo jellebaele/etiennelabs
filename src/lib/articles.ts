@@ -1,6 +1,7 @@
 import fs from 'fs';
 import matter from 'gray-matter';
 import path from 'path';
+import readingTime from 'reading-time';
 
 const ARTICLES_DIR = path.join(process.cwd(), 'content/articles');
 
@@ -10,6 +11,7 @@ export type ArticleMeta = {
   date: string;
   tags: string[];
   excerpt: string;
+  readingTimeMs: number;
   position?: number;
 };
 
@@ -65,6 +67,7 @@ export function getArticleBySlug(slug: string): Article {
         date: data.date,
         tags: Array.isArray(data.tags) ? data.tags : [],
         excerpt: data.excerpt ?? '',
+        readingTimeMs: readingTime(content).time,
       },
       content,
     };
@@ -97,11 +100,16 @@ export function getFolderArticle(folderName: string, slug: string): Article {
           tags: data.tags || config.tags,
           excerpt: data.excerpt ?? '',
           position: data.position ?? 999,
+          readingTimeMs: readingTime(content).time,
         },
         content,
       };
     })
     .sort((a, b) => a.meta.position - b.meta.position);
+
+  const totalReadingTime = children.reduce((total, child) => {
+    return total + child.meta.readingTimeMs;
+  }, 0);
 
   return {
     meta: {
@@ -110,6 +118,7 @@ export function getFolderArticle(folderName: string, slug: string): Article {
       date: config.date,
       tags: Array.isArray(config.tags) ? config.tags : [],
       excerpt: config.excerpt ?? '',
+      readingTimeMs: totalReadingTime,
     },
     content: config.excerpt ?? '',
     children,

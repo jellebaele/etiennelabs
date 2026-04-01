@@ -34,7 +34,7 @@ const ArticleHeader = ({ article }: ArticleHeaderProps) => {
         </time>
         <div className='w-2 h-2 bg-primary rounded-full' />
         <span className='font-mono text-xs uppercase tracking-wider text-muted-foreground'>
-          5 min read
+          {Math.ceil(article.meta.readingTimeMs / 60000)} min read
         </span>
       </div>
     </section>
