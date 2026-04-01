@@ -1,35 +1,16 @@
 'use client';
 
 import { Article } from '@/lib/articles';
-import { ChevronDown, ChevronRight } from 'lucide-react'; // Optional: for icons
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-type SidebarProps = {
-  articles: Article[];
-};
-
-const ArticleSidebar = ({ articles }: SidebarProps) => {
-  const pathname = usePathname();
-
-  return (
-    <nav className='w-64 sticky top-24 h-fit flex flex-col gap-2 p-4 border-r border-border'>
-      <p className='text-xs font-mono uppercase text-muted-foreground mb-4 tracking-widest'>
-        Documentation
-      </p>
-      {articles.map((article) => (
-        <SidebarItem
-          key={article.meta.slug}
-          article={article}
-          currentPath={pathname}
-        />
-      ))}
-    </nav>
-  );
-};
-
-const SidebarItem = ({ article, currentPath }: { article: Article; currentPath: string }) => {
+const ArticleSidebarItem = ({
+  article,
+  currentPath,
+}: {
+  article: Article;
+  currentPath: string;
+}) => {
   const hasChildren = article.children && article.children.length > 0;
   const isActive = currentPath === `/articles/${article.meta.slug}`;
 
@@ -40,6 +21,17 @@ const SidebarItem = ({ article, currentPath }: { article: Article; currentPath: 
   return (
     <div className='flex flex-col'>
       <div className='flex items-center group'>
+        <Link
+          href={`/articles/${article.meta.slug}`}
+          className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md ${
+            isActive
+              ? 'bg-primary/10 text-primary font-bold'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+          }`}>
+          {article.meta.title}
+        </Link>
+      </div>
+      {/* <div className='flex items-center group'>
         <Link
           href={`/articles/${article.meta.slug}`}
           className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md ${
@@ -60,10 +52,10 @@ const SidebarItem = ({ article, currentPath }: { article: Article; currentPath: 
             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
         )}
-      </div>
+      </div> */}
 
       {/* Collapsible Section for Sub-articles */}
-      {hasChildren && isOpen && (
+      {/* {hasChildren && isOpen && (
         <div className='ml-4 mt-1 flex flex-col border-l border-border pl-2 gap-1'>
           {article.children!.map((child) => {
             const isSubActive = currentPath === `/articles/${child.meta.slug}`;
@@ -81,9 +73,9 @@ const SidebarItem = ({ article, currentPath }: { article: Article; currentPath: 
             );
           })}
         </div>
-      )}
+      )} */}
     </div>
   );
 };
 
-export default ArticleSidebar;
+export default ArticleSidebarItem;

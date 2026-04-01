@@ -1,4 +1,4 @@
-import ArticleSidebar from '@/components/articles/ArticleSidebar';
+import ArticleSidebar from '@/components/articles/sidebar/ArticleSidebar';
 import { getAllArticles } from '@/lib/articles';
 import { ReactNode } from 'react';
 
