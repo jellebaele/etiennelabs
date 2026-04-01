@@ -9,14 +9,14 @@ const LatestArticles = () => {
     <section
       className='container py-16 md:py-24'
       id='articles'>
-      <div className='flex items-center justify-between mb-12'>
+      <div className='flex flex-col sm:items-center sm:flex-row justify-between mb-12'>
         <div className='flex items-center gap-3'>
           <div className='w-3 h-3 bg-primary' />
           <h2 className='text-3xl font-bold'>Latest Articles</h2>
         </div>
         <Link
           href='/articles'
-          className='font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors'>
+          className='font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors mt-3 sm:mt-0'>
           View all →
         </Link>
       </div>
