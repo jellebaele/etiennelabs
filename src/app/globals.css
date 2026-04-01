@@ -140,6 +140,7 @@
   }
   html {
     @apply font-sans;
+    overflow-y: scroll;
   }
 }
 
