@@ -36,7 +36,8 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
 
       {article.children && article.children.length > 0 ? (
         <>
-          <h3 className='text-xl font-bold mb-4'>Articles in this series:</h3>
+          <p className='mb-4'>{article.content}</p>
+          <h3 className='font-bold mb-4'>Articles in this series:</h3>
           <div className='grid grid-cols-2 gap-3'>
             {article.children.map((child) => (
               <ArticleCard
