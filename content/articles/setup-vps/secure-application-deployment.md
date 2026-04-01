@@ -81,7 +81,7 @@ $ nano .env
 
 Add this line:
 
-```
+```bash
 CF_TUNNEL_TOKEN=<your-tunnel-token-from-cloudflare>
 ```
 

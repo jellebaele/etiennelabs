@@ -18,11 +18,12 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 
 ## TODO
 
-- Add config settings
-- Add logo
-- meta data
-- motion to add animations
-- archive
-- mail possibilities
-- Docker support
-- hosting
+- [ ] Add config settings
+- [ ] Add logo
+- [ ] meta data
+- [ ] motion to add animations
+- [ ] archive
+- [ ] mail possibilities
+- [x] Docker support
+- [ ] deploy
+- [ ] sidebar opening children
