@@ -26,7 +26,7 @@ const ArticleSidebarItem = ({
           className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md ${
             isActive
               ? 'bg-primary/10 text-primary font-bold'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
           }`}>
           {article.meta.title}
         </Link>
