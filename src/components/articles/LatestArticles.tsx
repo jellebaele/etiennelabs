@@ -20,7 +20,7 @@ const LatestArticles = () => {
           View all →
         </Link>
       </div>
-      <div className='grid grid-cols-3 gap-3'>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
         {articles.slice(0, 3).map((article, index) => {
           return (
             <ArticleCard

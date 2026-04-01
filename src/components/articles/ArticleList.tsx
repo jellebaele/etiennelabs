@@ -24,8 +24,6 @@ const ArticleList = ({ articles }: ArticleListProps) => {
   const groupedArticlesByTag = useMemo(() => {
     const groups: Record<string, Article[]> = {};
 
-    console.log(filteredArticles);
-
     filteredArticles.forEach((article) => {
       article.meta.tags.forEach((tag) => {
         if (activeTag !== 'all' && tag !== activeTag) return;
@@ -76,13 +74,6 @@ const ArticleList = ({ articles }: ArticleListProps) => {
           );
         })
       )}
-
-      {/* {articles.map((article, index) => (
-        <ArticleCard
-          key={index}
-          article={article}
-        />
-      ))} */}
     </div>
   );
 };

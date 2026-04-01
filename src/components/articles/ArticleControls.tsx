@@ -23,7 +23,7 @@ const ArticleControls = ({
   const tags = useMemo(() => Array.from(new Set(articles.flatMap((a) => a.meta.tags))), [articles]);
 
   return (
-    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12'>
+    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 sm:mb-12'>
       <div className='flex items-center'>
         <button
           onClick={() => setViewMode('date')}
