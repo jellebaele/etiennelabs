@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 const HeroSection = () => {
   return (
@@ -26,12 +27,16 @@ const HeroSection = () => {
             </p>
 
             <div className='flex gap-4 pt-2'>
-              <button className='bg-primary text-primary-foreground retro-shadow px-6 py-3 font-mono text-sm uppercase tracking-wider hover:-translate-y-0.5 transition-transform border-2 border-foreground'>
+              <Link
+                href='/articles'
+                className='bg-primary text-primary-foreground retro-shadow px-6 py-3 font-mono text-sm uppercase tracking-wider hover:-translate-y-0.5 transition-transform border-2 border-foreground'>
                 Latest Articles
-              </button>
-              <button className='retro-border px-6 py-3 font-mono text-sm uppercase tracking-wider hover:bg-muted transition-colors'>
+              </Link>
+              <Link
+                href='/about'
+                className='retro-border px-6 py-3 font-mono text-sm uppercase tracking-wider hover:bg-muted transition-colors'>
                 About Me
-              </button>
+              </Link>
             </div>
           </div>
 
