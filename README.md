@@ -15,3 +15,14 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 - Styling: Tailwind CSS + shadcn/ui
 - Markdown: react-markdown + remark-gfm + rehype-raw
 - Code: react-syntax-highlighter
+
+## TODO
+
+- Add config settings
+- Add logo
+- meta data
+- motion to add animations
+- archive
+- mail possibilities
+- Docker support
+- hosting
