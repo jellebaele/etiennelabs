@@ -2,7 +2,7 @@
 title: 'Database Race Conditions'
 date: '2026-01-15'
 tags: ['Backend', '.Net']
-excerpt: 'A deep dive into race conditions...'
+excerpt: 'A technical guide to identifying and mitigating concurrency conflicts through isolation levels and locking strategies.'
 ---
 
 # Intro

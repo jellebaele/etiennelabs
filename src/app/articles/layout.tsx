@@ -10,8 +10,7 @@ const ArticleLayout = ({ children }: ArticleLayoutProps) => {
   const articles = getAllArticles();
 
   return (
-    <div className='co∂ntainer mx-auto flex gap-10'>
-      {/* Sidebar hidden on mobile, visible on md+ */}
+    <div className='container mx-auto flex gap-10'>
       <aside className='hidden md:block'>
         <ArticleSidebar articles={articles} />
       </aside>

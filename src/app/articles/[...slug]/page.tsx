@@ -51,7 +51,7 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
           </div>
         </>
       ) : (
-        <div className='prose max-w-none'>
+        <div>
           <Markdown>{article.content}</Markdown>
           <ArticleFooter
             slug={slug}
