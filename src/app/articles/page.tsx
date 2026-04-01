@@ -1,5 +1,4 @@
-import ArticleCard from '@/components/articles/ArticleCard';
-import ArticleCountDivider from '@/components/articles/ArticleCountDivider';
+import ArticleList from '@/components/articles/ArticleList';
 import { getAllArticles } from '@/lib/articles';
 
 const ArticlesPages = () => {
@@ -12,16 +11,7 @@ const ArticlesPages = () => {
         <h1 className='text-3xl font-bold'>Articles</h1>
       </div>
 
-      <div className='flex flex-col gap-6'>
-        <ArticleCountDivider count={articles.length} />
-
-        {articles.map((article, index) => (
-          <ArticleCard
-            key={index}
-            article={article}
-          />
-        ))}
-      </div>
+      <ArticleList articles={articles} />
     </section>
   );
 };
