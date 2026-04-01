@@ -136,8 +136,6 @@ export function getAdjacentArticles(currentSlug: string, type: ArticleType) {
   let flatArticles: Article[] = [];
 
   if (type === 'child') {
-    console.log('flattening');
-
     allArticles.forEach((article) => {
       flatArticles.push(article);
       if (article.children) flatArticles.push(...article.children);
