@@ -1,18 +1,25 @@
 'use client';
 
 import { Article } from '@/lib/articles';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { ViewMode } from './ArticleList';
 
 type ArticleControlsProps = {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  activeTag: string;
+  setActiveTag: (tag: string) => void;
   articles: Article[];
 };
 
-type ViewMode = 'date' | 'tag';
-
-const ArticleControls = ({ articles }: ArticleControlsProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('date');
-  const [activeTag, setActiveTag] = useState<string>('all');
+const ArticleControls = ({
+  articles,
+  viewMode,
+  setViewMode,
+  activeTag,
+  setActiveTag,
+}: ArticleControlsProps) => {
   const tags = useMemo(() => Array.from(new Set(articles.flatMap((a) => a.meta.tags))), [articles]);
 
   return (

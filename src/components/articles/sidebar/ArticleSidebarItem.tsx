@@ -24,7 +24,9 @@ const ArticleSidebarItem = ({ article }: ArticleSidebarItemProps) => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}>
-      <div className='flex flex-col'>
+      <div
+        className='flex flex-col'
+        key={article.meta.title}>
         <div className='flex items-center group w-full'>
           <CollapsibleTrigger
             asChild
