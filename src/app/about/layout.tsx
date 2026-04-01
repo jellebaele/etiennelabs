@@ -6,7 +6,7 @@ type AboutLayout = {
 
 const AboutLayout = ({ children }: AboutLayout) => {
   return (
-    <div>
+    <div className='pb-10'>
       <main>{children}</main>
     </div>
   );

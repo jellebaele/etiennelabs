@@ -11,7 +11,7 @@ By using a custom-built Markdown engine integrated with shadcn/ui, I’ve create
 <details>
 <summary>The "Build vs. Buy" Decision</summary>
 
-I chose to build this platform from scratch using Next.js rather than a standard CMS. This allowed me to fine-tune the rendering of technical components like these tabs and collapsible sections, ensuring the reading experience is as precise as the code itself.
+I chose to build this platform from scratch using Next.js rather than a standard CMS. This allowed me to fine-tune the rendering of technical components like these collapsible sections, ensuring the reading experience is as precise as the code itself.
 
 </details>
 
