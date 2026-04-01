@@ -49,7 +49,7 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
           return (
             <details
               {...props}
-              className='border border-slate-200 rounded-lg p-4 my-4 bg-primary/10 group'>
+              className='border border-slate-200 rounded-lg p-4 my-4 bg-primary/5 group'>
               {children}
             </details>
           );
