@@ -3,7 +3,7 @@ position: 1
 title: 'S - Single Responsibility Principle'
 ---
 
-# Defintion
+# Definition
 
 The Single Responsibility Principle (SRP) states that a class should have only one reason to change.
 

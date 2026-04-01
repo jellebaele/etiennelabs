@@ -3,7 +3,7 @@ title: 'L - Liskov Substition Principle'
 position: 3
 ---
 
-# Defintion
+# Definition
 
 The Liskov Substitution Principle (LSP) states that subtypes must be replaceable for their base types without breaking behavior.
 

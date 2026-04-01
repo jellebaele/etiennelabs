@@ -3,7 +3,7 @@ position: 2
 title: 'O - Open/Closed Principle'
 ---
 
-# Defintion
+# Definition
 
 The Open/Closed Principle (OCP) states that software entities should be **open** for extension but **closed** for modification.
 
