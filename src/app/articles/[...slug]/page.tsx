@@ -1,5 +1,6 @@
 import ArticleCard from '@/components/articles/ArticleCard';
 import ArticleHeader from '@/components/articles/ArticleHeader';
+import ArticleFooter from '@/components/articles/footer/ArticleFooter';
 import Markdown from '@/components/Markdown';
 import { getAllArticles, getArticleBySlug } from '@/lib/articles';
 
@@ -52,6 +53,10 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
       ) : (
         <div className='prose max-w-none'>
           <Markdown>{article.content}</Markdown>
+          <ArticleFooter
+            slug={slug}
+            type={article.meta.type}
+          />
         </div>
       )}
     </article>

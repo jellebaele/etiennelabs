@@ -5,6 +5,8 @@ import readingTime from 'reading-time';
 
 const ARTICLES_DIR = path.join(process.cwd(), 'content/articles');
 
+export type ArticleType = 'parent' | 'child';
+
 export type ArticleMeta = {
   slug: string;
   title: string;
@@ -13,6 +15,7 @@ export type ArticleMeta = {
   excerpt: string;
   readingTimeMs: number;
   position?: number;
+  type: ArticleType;
 };
 
 export type Article = {
@@ -68,6 +71,7 @@ export function getArticleBySlug(slug: string): Article {
         tags: Array.isArray(data.tags) ? data.tags : [],
         excerpt: data.excerpt ?? '',
         readingTimeMs: readingTime(content).time,
+        type: slug.includes('/') ? 'child' : 'parent',
       },
       content,
     };
@@ -84,7 +88,7 @@ export function getFolderArticle(folderName: string, slug: string): Article {
   const folderPath = path.join(ARTICLES_DIR, folderName);
   const config = getConfig(folderName);
 
-  const children = fs
+  const children: Article[] = fs
     .readdirSync(folderPath)
     .filter((f) => f.endsWith('.md'))
     .map((fileName) => {
@@ -101,6 +105,7 @@ export function getFolderArticle(folderName: string, slug: string): Article {
           excerpt: data.excerpt ?? '',
           position: data.position ?? 999,
           readingTimeMs: readingTime(content).time,
+          type: 'child' as const,
         },
         content,
       };
@@ -119,9 +124,46 @@ export function getFolderArticle(folderName: string, slug: string): Article {
       tags: Array.isArray(config.tags) ? config.tags : [],
       excerpt: config.excerpt ?? '',
       readingTimeMs: totalReadingTime,
+      type: 'parent',
     },
     content: config.excerpt ?? '',
     children,
+  };
+}
+
+export function getAdjacentArticles(currentSlug: string, type: ArticleType) {
+  const allArticles = getAllArticles();
+  let flatArticles: Article[] = [];
+
+  if (type === 'child') {
+    console.log('flattening');
+
+    allArticles.forEach((article) => {
+      flatArticles.push(article);
+      if (article.children) flatArticles.push(...article.children);
+    });
+  } else {
+    flatArticles = allArticles;
+  }
+
+  flatArticles.sort((a, b) => {
+    if (a.meta.type === 'child' && b.meta.type === 'child')
+      return a.meta.position! - b.meta.position!;
+    return a.meta.date > b.meta.date ? -1 : 1;
+  });
+
+  const currentIndex = flatArticles.findIndex((article) => article.meta.slug === currentSlug);
+
+  const previous =
+    (currentIndex === 1 && type !== 'child') || currentIndex > 1
+      ? flatArticles[currentIndex - 1]
+      : null;
+
+  const next = currentIndex < flatArticles.length - 1 ? flatArticles[currentIndex + 1] : null;
+
+  return {
+    previous,
+    next,
   };
 }
 
