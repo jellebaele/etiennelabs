@@ -10,7 +10,7 @@ const navItems = [
 const Header = () => {
   return (
     <header className='border-b-2 border-foreground bg-background'>
-      <div className='container flex items-center justify-between py-4'>
+      <div className='container flex items-center justify-between py-4 w-full'>
         <Link
           href='/'
           className='flex items-center gap-2'>

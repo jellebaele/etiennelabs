@@ -1,80 +1,83 @@
 'use client';
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Article } from '@/lib/articles';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-const ArticleSidebarItem = ({
-  article,
-  currentPath,
-}: {
+type ArticleSidebarItemProps = {
   article: Article;
-  currentPath: string;
-}) => {
+};
+
+const ArticleSidebarItem = ({ article }: ArticleSidebarItemProps) => {
+  const currentPath = usePathname();
   const hasChildren = article.children && article.children.length > 0;
   const isActive = currentPath === `/articles/${article.meta.slug}`;
-
-  // Auto-expand if we are currently viewing a child of this folder
-  const isChildActive = hasChildren && currentPath.includes(`/articles/${article.meta.slug}/`);
-  const [isOpen, setIsOpen] = useState(isChildActive);
+  const [isOpen, setIsOpen] = useState(false);
+  // // Auto-expand if we are currently viewing a child of this folder
+  // const isChildActive = hasChildren && currentPath.includes(`/articles/${article.meta.slug}/`);
+  // const [isOpen, setIsOpen] = useState(isChildActive);
 
   return (
-    <div className='flex flex-col'>
-      <div className='flex items-center group'>
-        <Link
-          href={`/articles/${article.meta.slug}`}
-          className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md ${
-            isActive
-              ? 'bg-primary/10 text-primary font-bold'
-              : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-          }`}>
-          {article.meta.title}
-        </Link>
-      </div>
-      {/* <div className='flex items-center group'>
-        <Link
-          href={`/articles/${article.meta.slug}`}
-          className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md ${
-            isActive
-              ? 'bg-primary/10 text-primary font-bold'
-              : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-          }`}>
-          {article.meta.title}
-        </Link>
-
-        {hasChildren && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsOpen(!isOpen);
-            }}
-            className='p-1 hover:bg-secondary rounded-md text-muted-foreground'>
-            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-        )}
-      </div> */}
-
-      {/* Collapsible Section for Sub-articles */}
-      {/* {hasChildren && isOpen && (
-        <div className='ml-4 mt-1 flex flex-col border-l border-border pl-2 gap-1'>
-          {article.children!.map((child) => {
-            const isSubActive = currentPath === `/articles/${child.meta.slug}`;
-            return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}>
+      <div className='flex flex-col'>
+        <div className='flex items-center group w-full'>
+          <CollapsibleTrigger
+            asChild
+            onClick={() => hasChildren && setIsOpen(!isOpen)}>
+            <div
+              className={`flex items-center gap-2 w-full ${
+                isActive
+                  ? 'text-primary font-bold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+              }`}>
               <Link
-                key={child.meta.slug}
-                href={`/articles/${child.meta.slug}`}
-                className={`py-1 px-2 text-xs transition-colors rounded-md ${
-                  isSubActive
-                    ? 'text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}>
-                {child.meta.title}
+                href={`/articles/${article.meta.slug}`}
+                className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md `}>
+                {article.meta.title}
               </Link>
-            );
-          })}
+              {hasChildren &&
+                (isOpen ? (
+                  <ChevronDown
+                    size={16}
+                    className='mr-3'
+                  />
+                ) : (
+                  <ChevronRight
+                    size={16}
+                    className='mr-3'
+                  />
+                ))}
+            </div>
+          </CollapsibleTrigger>
         </div>
-      )} */}
-    </div>
+        <CollapsibleContent>
+          {article.children &&
+            article.children.map((child) => {
+              const isSubActive = currentPath === `/articles/${child.meta.slug}`;
+
+              return (
+                <div
+                  className={`flex items-center gap-2 w-full ${
+                    isSubActive
+                      ? 'text-primary font-bold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
+                  }`}>
+                  <Link
+                    href={`/articles/${child.meta.slug}`}
+                    className={`flex-1 py-1 px-6 text-sm transition-colors rounded-md `}>
+                    {child.meta.title}
+                  </Link>
+                </div>
+              );
+            })}
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   );
 };
 
