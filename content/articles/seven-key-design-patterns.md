@@ -247,7 +247,7 @@ else
 </Tabs>
 Output:
 
-```
+```bash
 Singleton works, both variables contain the same instance.
 ```
 

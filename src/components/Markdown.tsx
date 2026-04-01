@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
 type MarkdownProps = {
@@ -12,6 +13,7 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       components={{
         code({ className, children, ...props }) {
           const match = /language-(\w+)/.exec(className || '');
@@ -40,6 +42,27 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
               {...props}>
               {children}
             </code>
+          );
+        },
+
+        details({ children, ...props }) {
+          return (
+            <details
+              {...props}
+              className='border border-slate-200 rounded-lg p-4 my-4 bg-primary/10 group'>
+              {children}
+            </details>
+          );
+        },
+
+        summary({ children, ...props }) {
+          return (
+            <summary
+              {...props}
+              className='cursor-pointer font-bold text-primary list-none flex items-center gap-2 outline-none'>
+              <span className='transition-transform group-open:rotate-90'>▶</span>
+              {children}
+            </summary>
           );
         },
       }}>
