@@ -18,8 +18,8 @@ In the Dokploy dashboard, create a new project. This groups related services tog
 You will be prompted to provide Docker registry credentials. If you are pushing images to GitHub Container Registry (GHCR) or Docker Hub, provide:
 
 - **Docker Registry URL:** The registry endpoint (e.g., `ghcr.io`, `docker.io`)
-- **Username:** Your registry username
-- **Password:** Your registry access token (not your password)
+- **Username:** Your Github username
+- **Password:** A GitHub Personal Access Token (PAT)
 
 Once you provide credentials, Dokploy can pull images from your registry whenever you trigger a deployment.
 
