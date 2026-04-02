@@ -1,8 +1,10 @@
 import ArticleCard from '@/components/articles/ArticleCard';
 import ArticleHeader from '@/components/articles/ArticleHeader';
+import ArticleTableOfContents from '@/components/articles/ArticleTableOfContents';
 import ArticleFooter from '@/components/articles/footer/ArticleFooter';
 import Markdown from '@/components/Markdown';
 import { getAllArticles, getArticleBySlug } from '@/lib/articles';
+import { getHeadings } from '@/lib/markdown';
 
 export async function generateStaticParams() {
   const articles = getAllArticles();
@@ -52,6 +54,7 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
         </>
       ) : (
         <div>
+          <ArticleTableOfContents headings={getHeadings(article.content)} />
           <Markdown>{article.content}</Markdown>
           <ArticleFooter
             slug={slug}
