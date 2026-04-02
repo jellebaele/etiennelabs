@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { sendEmail } from '../actions/emails';
 
 const ContactPage = () => {
   const [name, setName] = useState('');
@@ -13,6 +14,13 @@ const ContactPage = () => {
     //   title: 'Message sent!',
     //   description: "Thanks for reaching out. I'll get back to you soon.",
     // });
+
+    try {
+      sendEmail({ senderName: name, senderEmail: email, message: message });
+    } catch (error) {
+      console.error('failed sending: ' + error);
+    }
+
     setName('');
     setEmail('');
     setMessage('');
