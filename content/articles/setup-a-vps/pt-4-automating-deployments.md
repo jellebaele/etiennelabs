@@ -151,7 +151,7 @@ Cloudflare Service Tokens solve this. They are API credentials that GitHub can u
 
 This allows the service token (GitHub) to access Dokploy without email authentication.
 
-## Store Service Token in GitHub Secrets
+## Store Service Tokens in GitHub Secrets
 
 1. Navigate to your GitHub repository
 2. Go to **Settings** → **Secrets and variables** → **Actions**
