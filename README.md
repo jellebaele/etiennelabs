@@ -15,6 +15,7 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 - Styling: Tailwind CSS + shadcn/ui
 - Markdown: react-markdown + remark-gfm + rehype-raw
 - Code: react-syntax-highlighter
+- Mails: [Resend](https://resend.com)
 
 ## TODO
 

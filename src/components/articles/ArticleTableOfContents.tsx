@@ -6,8 +6,6 @@ import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
-const dummyContent = ['Intro', 'What is it?'];
-
 type ArticleTableOfContentsProps = {
   headings: Heading[];
 };
@@ -45,12 +43,12 @@ const ArticleTableOfContents = ({ headings }: ArticleTableOfContentsProps) => {
                 className='overflow-hidden'>
                 <div className='border-t-2 mx-4 pb-2' />
                 <div className='flex flex-col gap-1'>
-                  {headings.map((heading) => {
+                  {headings.map((heading, index) => {
                     const indent = (heading.level - 1) * 16;
 
                     return (
                       <div
-                        key={heading.id}
+                        key={index}
                         style={{ paddingLeft: `${indent}px` }}
                         className='group flex items-center gap-2'>
                         <span className='text-primary opacity-0 group-hover:opacity-100 transition-opacity font-mono shrink-0'>
