@@ -24,7 +24,7 @@ const ArticleHeader = ({ article }: ArticleHeaderProps) => {
         ))}
       </div>
 
-      <h1 className='text-4xl md:text-6xl font-bold leading-[0.95] tracking-tight mt-4'>
+      <h1 className='text-5xl font-bold leading-[0.95] tracking-tight mt-4'>
         {article.meta.title}
       </h1>
 

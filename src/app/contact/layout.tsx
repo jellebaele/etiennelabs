@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
 
-type AboutLayoutProps = {
+type ContactLayoutProps = {
   children: ReactNode;
 };
 
-const AboutLayout = ({ children }: AboutLayoutProps) => {
+const ContactLayout = ({ children }: ContactLayoutProps) => {
   return (
     <div className='pb-10 pt-8'>
       <main>{children}</main>
@@ -12,4 +12,4 @@ const AboutLayout = ({ children }: AboutLayoutProps) => {
   );
 };
 
-export default AboutLayout;
+export default ContactLayout;
