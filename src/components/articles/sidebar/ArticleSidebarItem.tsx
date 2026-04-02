@@ -14,11 +14,16 @@ type ArticleSidebarItemProps = {
 const ArticleSidebarItem = ({ article }: ArticleSidebarItemProps) => {
   const currentPath = usePathname();
   const hasChildren = article.children && article.children.length > 0;
-  const isActive = currentPath === `/articles/${article.meta.slug}`;
-  const [isOpen, setIsOpen] = useState(false);
-  // // Auto-expand if we are currently viewing a child of this folder
-  // const isChildActive = hasChildren && currentPath.includes(`/articles/${article.meta.slug}/`);
-  // const [isOpen, setIsOpen] = useState(isChildActive);
+  const isChildActive = hasChildren && currentPath.includes(article.meta.slug);
+  const [isOpen, setIsOpen] = useState(isChildActive);
+
+  const isActive = (): boolean => {
+    if (article.meta.type === 'child') return currentPath === `/articles/${article.meta.slug}`;
+    else
+      return (
+        currentPath === `/articles/${article.meta.slug}` || currentPath.includes(article.meta.slug)
+      );
+  };
 
   return (
     <Collapsible
@@ -33,7 +38,7 @@ const ArticleSidebarItem = ({ article }: ArticleSidebarItemProps) => {
             onClick={() => hasChildren && setIsOpen(!isOpen)}>
             <div
               className={`flex items-center gap-2 w-full ${
-                isActive
+                isActive()
                   ? 'text-primary font-bold'
                   : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
               }`}>
