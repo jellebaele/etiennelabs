@@ -19,6 +19,6 @@ I chose to build this platform from scratch using Next.js rather than a standard
 
 I'm always open to discussing new projects, architectural challenges, or the latest trends in tech.
 
-- GitHub: github.com/yourusername
-- LinkedIn: linkedin.com/in/yourusername
-- Email: hello@yourdomain.com
+- [GitHub](https://github.com/jellebaele)
+- [LinkedIn](https://linkedin.com/in/jellebaele)
+- [Contact me via email](/contact)
