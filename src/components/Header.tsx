@@ -1,7 +1,14 @@
+'use client';
+
 import { siteConfig } from 'config/site';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet';
 
 const Header = () => {
+  const [open, setOpen] = useState(false);
+
   return (
     <header className='border-b-2 border-foreground bg-background'>
       <div className='container flex items-center justify-between py-4 w-full'>
@@ -23,9 +30,29 @@ const Header = () => {
           ))}
         </nav>
 
-        <button className='retro-border retro-shadow-sm px-4 py-2 text-sm font-mono uppercase tracking-wider hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all'>
-          Subscribe
-        </button>
+        <Sheet
+          open={open}
+          onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <button className='md:hidden retro-border retro-shadow-sm p-2 hover:bg-primary hover:text-primary-foreground transition-all'>
+              <Menu className='h-5 w-5' />
+            </button>
+          </SheetTrigger>
+          <SheetContent side='right'>
+            <SheetTitle className='font-display text-lg tracking-tight ml-5 mt-7'>Menu</SheetTitle>
+            <nav className='flex flex-col gap-4 mt-8 px-5'>
+              {siteConfig.navigation.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className='text-sm font-mono uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors py-2 border-b border-border'>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );
