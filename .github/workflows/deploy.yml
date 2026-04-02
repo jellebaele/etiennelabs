@@ -32,3 +32,9 @@ jobs:
             -t ghcr.io/${{ github.repository_owner }}/etiennelabs:${{ github.sha }} \
             --push \
             .
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
+            -H "CF-Access-Client-Id: ${{ secrets.CF_ACCESS_CLIENT_ID }}" \
+            -H "CF-Access-Client-Secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" \
+            -H "Content-Type: application/json"
