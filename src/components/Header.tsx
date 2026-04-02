@@ -1,11 +1,5 @@
+import { siteConfig } from 'config/site';
 import Link from 'next/link';
-
-const navItems = [
-  { label: 'Home', href: '/' },
-  { label: 'Articles', href: '/articles' },
-  { label: 'About', href: '/about' },
-  { label: 'Archive', href: '/#archive' },
-];
 
 const Header = () => {
   return (
@@ -15,11 +9,11 @@ const Header = () => {
           href='/'
           className='flex items-center gap-2'>
           <div className='w-8 h-8 bg-primary retro-shadow-sm' />
-          <span className='text-xl font-bold tracking-tight font-display'>ETIENNELABS</span>
+          <span className='text-xl font-bold tracking-tight font-display'>{siteConfig.name}</span>
         </Link>
 
         <nav className='hidden md:flex items-center gap-8'>
-          {navItems.map((item) => (
+          {siteConfig.navigation.map((item) => (
             <Link
               key={item.label}
               href={item.href}

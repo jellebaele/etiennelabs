@@ -1,3 +1,4 @@
+import { siteConfig } from 'config/site';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -22,8 +23,7 @@ const HeroSection = () => {
             </h1>
 
             <p className='text-muted-foreground text-lg leading-relaxed max-w-md'>
-              A space for exploring the intersection of creativity and technology. Curated thoughts
-              on modern design and development.
+              {siteConfig.description}
             </p>
 
             <div className='flex gap-4 pt-2'>

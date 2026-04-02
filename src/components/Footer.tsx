@@ -1,3 +1,4 @@
+import { siteConfig } from 'config/site';
 import Link from 'next/link';
 
 const navItems = [
@@ -18,9 +19,14 @@ const Footer = () => {
               <span className='text-lg font-bold font-display'>ETIENNELABS</span>
             </div>
             <p className='text-sm text-muted-foreground font-mono leading-relaxed'>
-              Thoughts on design, code,
-              <br />
-              and everything in between.
+              {siteConfig.tagline.map((line, index) => {
+                return (
+                  <div key={index}>
+                    {line}
+                    <br />
+                  </div>
+                );
+              })}
             </p>
           </div>
 
@@ -29,12 +35,12 @@ const Footer = () => {
               Navigate
             </h4>
             <ul className='space-y-2'>
-              {navItems.map((item) => (
-                <li key={item.label}>
+              {siteConfig.navigation.map((navItem) => (
+                <li key={navItem.label}>
                   <Link
-                    href={item.href}
+                    href={navItem.href}
                     className='text-sm hover:text-primary transition-colors'>
-                    {item.label}
+                    {navItem.label}
                   </Link>
                 </li>
               ))}
@@ -46,12 +52,12 @@ const Footer = () => {
               Connect
             </h4>
             <ul className='space-y-2'>
-              {['Twitter', 'GitHub', 'RSS Feed'].map((item) => (
-                <li key={item}>
+              {siteConfig.footer.links.map((item) => (
+                <li key={item.label}>
                   <a
-                    href='#'
+                    href={item.url}
                     className='text-sm hover:text-primary transition-colors'>
-                    {item}
+                    {item.label}
                   </a>
                 </li>
               ))}
@@ -60,9 +66,7 @@ const Footer = () => {
         </div>
 
         <div className='mt-12 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4'>
-          <p className='text-xs font-mono text-muted-foreground'>
-            © Jelle Baele {new Date().getFullYear()} — All rights reserved
-          </p>
+          <p className='text-xs font-mono text-muted-foreground'>{siteConfig.footer.copyright}</p>
           <div className='flex items-center gap-4'>
             <div className='w-2 h-2 bg-primary rounded-full' />
             <div className='w-2 h-2 bg-secondary rounded-full' />
