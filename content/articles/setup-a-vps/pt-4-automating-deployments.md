@@ -230,6 +230,7 @@ Variables starting with `github.` are pieces of metadata about your repository a
 By using these built-in variables, your workflow becomes portable. You could copy this exact YAML file to a different repository, and it would work immediately without any configuration changes.
 
 </details>
+
 # Conclusion: Completing the Circle
 
 You have successfully built a complete, automated deployment pipeline:
