@@ -1,4 +1,7 @@
+'use client';
+
 import { siteConfig } from 'config/site';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -7,7 +10,7 @@ const HeroSection = () => {
     <section className='relative overflow-hidden border-b-2 border-foreground'>
       <div className='container py-16 md:py-24'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-12 items-center mx-5'>
-          <div className='space-y-6 opacity-0 animate-fade-up'>
+          <div className='space-y-6'>
             <div className='flex items-center gap-3'>
               <div className='h-px w-12 bg-primary' />
               <span className='font-mono text-xs uppercase tracking-widest text-muted-foreground'>
@@ -40,10 +43,20 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div
-            className='relative opacity-0 animate-fade-up'
-            style={{ animationDelay: '0.2s' }}>
-            <div className='retro-border retro-shadow overflow-hidden'>
+          <motion.div
+            className='relative'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+              ease: 'easeOut',
+            }}>
+            <div className='absolute -bottom-4 -left-4 w-16 h-16 bg-accent border-2 border-foreground z-0' />
+            <div className='absolute -top-4 -right-4 w-8 h-8 bg-secondary rounded-full border-2 border-foreground z-0' />
+
+            {/* Layer 10: Image container (On Top) */}
+            <div className='relative z-10 retro-border retro-shadow overflow-hidden bg-background'>
               <Image
                 src='/hero-abstract.jpg'
                 alt='Abstract retro geometric art'
@@ -53,10 +66,7 @@ const HeroSection = () => {
                 priority
               />
             </div>
-            {/* Decorative elements */}
-            <div className='absolute -bottom-4 -left-4 w-16 h-16 bg-accent border-2 border-foreground -z-10' />
-            <div className='absolute -top-4 -right-4 w-8 h-8 bg-secondary rounded-full border-2 border-foreground -z-10' />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

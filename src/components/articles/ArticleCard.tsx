@@ -1,5 +1,25 @@
+'use client';
+
 import { Article } from '@/lib/articles';
+import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+
+const cardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: 'easeOut',
+    },
+  },
+};
+
+const MotionLink = motion(Link);
 
 type ArticleCardProps = {
   article: Article;
@@ -9,10 +29,12 @@ type ArticleCardProps = {
 
 const ArticleCard = ({ article, showTags = true, showDate = true }: ArticleCardProps) => {
   return (
-    <Link
-      key={article.meta.slug}
+    <MotionLink
       href={`/articles/${article.meta.slug}`}
-      className='group block retro-border retro-shadow p-6 hover:-translate-y-0.5 transition-transform'>
+      variants={cardVariants}
+      // Note: We remove the 'transition-transform' from the className
+      // so it doesn't fight with Framer Motion during the entrance.
+      className='group block retro-border retro-shadow p-6 hover:-translate-y-1 transition-colors duration-300 bg-background'>
       <div className='flex items-center justify-between mb-3'>
         <div className='flex items-center justify-start gap-2'>
           {showTags &&
@@ -32,7 +54,7 @@ const ArticleCard = ({ article, showTags = true, showDate = true }: ArticleCardP
         {article.meta.title}
       </h2>
       <p className='text-muted-foreground text-sm'>{article.meta.excerpt}</p>
-    </Link>
+    </MotionLink>
   );
 };
 

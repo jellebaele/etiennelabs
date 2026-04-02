@@ -18,16 +18,16 @@ const Footer = () => {
               <div className='w-6 h-6 bg-primary' />
               <span className='text-lg font-bold font-display'>ETIENNELABS</span>
             </div>
-            <p className='text-sm text-muted-foreground font-mono leading-relaxed'>
+            <div className='text-sm text-muted-foreground font-mono leading-relaxed'>
               {siteConfig.tagline.map((line, index) => {
                 return (
-                  <div key={index}>
+                  <p key={index}>
                     {line}
                     <br />
-                  </div>
+                  </p>
                 );
               })}
-            </p>
+            </div>
           </div>
 
           <div>

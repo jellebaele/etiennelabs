@@ -1,6 +1,7 @@
 'use client';
 
 import { Article } from '@/lib/articles';
+import { motion, Variants } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import ArticleCard from './ArticleCard';
 import ArticleControls from './ArticleControls';
@@ -11,6 +12,17 @@ type ArticleListProps = {
 };
 
 export type ViewMode = 'date' | 'tag';
+
+const listContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.2,
+      staggerChildren: 0.1, // Slightly faster stagger for longer lists
+    },
+  },
+};
 
 const ArticleList = ({ articles }: ArticleListProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('date');
@@ -47,7 +59,12 @@ const ArticleList = ({ articles }: ArticleListProps) => {
       />
 
       {viewMode === 'date' ? (
-        <>
+        <motion.div
+          key='date-view' // Key helps Framer track view changes
+          variants={listContainerVariants}
+          initial='hidden'
+          animate='visible'
+          className='flex flex-col gap-6'>
           <ArticleCountDivider count={articles.length} />
           {filteredArticles.map((article, index) => (
             <ArticleCard
@@ -55,24 +72,31 @@ const ArticleList = ({ articles }: ArticleListProps) => {
               article={article}
             />
           ))}
-        </>
+        </motion.div>
       ) : (
-        Object.entries(groupedArticlesByTag).map(([tag, groupedArticles]) => {
-          return (
-            <div key={tag}>
-              <ArticleCountDivider
-                count={groupedArticles.length}
-                tag={tag}
-              />
-              {groupedArticles.map((article, index) => (
-                <ArticleCard
-                  key={index}
-                  article={article}
+        <motion.div
+          key='tag-view'
+          variants={listContainerVariants}
+          initial='hidden'
+          animate='visible'
+          className='flex flex-col gap-8'>
+          {Object.entries(groupedArticlesByTag).map(([tag, groupedArticles]) => {
+            return (
+              <div key={tag}>
+                <ArticleCountDivider
+                  count={groupedArticles.length}
+                  tag={tag}
                 />
-              ))}
-            </div>
-          );
-        })
+                {groupedArticles.map((article, index) => (
+                  <ArticleCard
+                    key={index}
+                    article={article}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </motion.div>
       )}
     </div>
   );
