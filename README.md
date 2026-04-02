@@ -23,8 +23,8 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 - [x] meta data
 - [x] motion to add animations
 - [ ] archive
-- [ ] mail possibilities
+- [x] mail possibilities
 - [x] Docker support
 - [x] deploy
 - [x] sidebar opening children
-- [ ] Table of contents
+- [ ] Table of contents blog

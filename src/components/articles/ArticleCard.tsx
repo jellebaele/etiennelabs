@@ -32,9 +32,7 @@ const ArticleCard = ({ article, showTags = true, showDate = true }: ArticleCardP
     <MotionLink
       href={`/articles/${article.meta.slug}`}
       variants={cardVariants}
-      // Note: We remove the 'transition-transform' from the className
-      // so it doesn't fight with Framer Motion during the entrance.
-      className='group block retro-border retro-shadow p-6 hover:-translate-y-1 transition-colors duration-300 bg-background'>
+      className='group block retro-border retro-shadow p-6 hover:-translate-y-1 transition-colors duration-300 bg-card'>
       <div className='flex items-center justify-between mb-3'>
         <div className='flex items-center justify-start gap-2'>
           {showTags &&
