@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { sendEmail } from '../actions/emails';
 
 const ContactPage = () => {
@@ -8,22 +9,25 @@ const ContactPage = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // toast({
-    //   title: 'Message sent!',
-    //   description: "Thanks for reaching out. I'll get back to you soon.",
-    // });
 
-    try {
-      sendEmail({ senderName: name, senderEmail: email, message: message });
-    } catch (error) {
-      console.error('failed sending: ' + error);
-    }
+    const result = await sendEmail({ senderName: name, senderEmail: email, message: message });
 
-    setName('');
-    setEmail('');
-    setMessage('');
+    if (result.success) {
+      toast.success('Message sent!', {
+        description: "Thanks for reaching out. I'll get back to you soon.",
+        position: 'top-right',
+      });
+
+      setName('');
+      setEmail('');
+      setMessage('');
+    } else
+      toast.error('Message was not sent.', {
+        description: result.message ?? 'Something went wrong, please try again later.',
+        position: 'top-right',
+      });
   };
   return (
     <>

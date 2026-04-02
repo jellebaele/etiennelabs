@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
@@ -29,6 +30,7 @@ export default function RootLayout({
           {children}
         </div>
         <Footer />
+        <Toaster />
       </body>
     </html>
   );
