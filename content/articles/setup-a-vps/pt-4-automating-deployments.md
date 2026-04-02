@@ -121,6 +121,8 @@ jobs:
 
 Replace `myapp-server` with your actual image name.
 
+The secrets will be set in the next steps.
+
 # 3. Secure GitHub Actions with Cloudflare Service Tokens
 
 **Why this step is critical:** Your Dokploy dashboard is protected by Cloudflare Zero Trust, which requires email-based login. GitHub Actions is an automated system that cannot log in with an email. We need a way for GitHub to authenticate without opening Dokploy to the public internet.
@@ -153,20 +155,81 @@ This allows the service token (GitHub) to access Dokploy without email authentic
 
 1. Navigate to your GitHub repository
 2. Go to **Settings** → **Secrets and variables** → **Actions**
-3. Create two new secrets:
+3. Create two new Repositoy secrets:
    - `CF_ACCESS_CLIENT_ID`: Paste the Client ID from Cloudflare
    - `CF_ACCESS_CLIENT_SECRET`: Paste the Client Secret from Cloudflare
 
 GitHub encrypts these secrets and will never display them in logs. Your workflow file can access them using `${{ secrets.CF_ACCESS_CLIENT_ID }}` syntax.
 
+<details>
+<summary>Difference between Repository and Environment secrets</summary>
+
+In GitHub, both types of secrets are used to store sensitive information (like API keys or passwords) securely, but the difference lies in scope and deployment control.
+
+Think of a repository secret as a master key for the whole house, while an environment secret is a specific key that only works for a specific room (like the "Production" room or the "Staging" room).
+
+### Repository Secrets
+
+These are the most common. They are available to any workflow run within that specific repository, regardless of where the code is being deployed.
+
+- **Scope:** Global to the entire repository.
+- **Access:** Any developer with access to run a workflow can use these secrets.
+- **Best Use Case:** Shared credentials that don't change between testing and production, such as a company-wide Docker Hub login or a Slack notification webhook.
+
+### Environment Secrets
+
+These are tied to a specific Environment (a logical target like production, development, or QA). They only become available to a GitHub Actions job when that job explicitly references the environment.
+
+- **Scope:** Restricted to a specific environment.
+- **Access:** Only accessible to jobs that define an environment: name property.
+- **Protection Rules:** This is the killer feature. You can require manual approvals or wait timers before a job can access these secrets.
+- **Best Use Case:** Deployment keys. For example, your production AWS key is stored as an environment secret so it can’t be accidentally used by a test script.
+
+### How they work together
+
+If you have a secret named API_KEY in both places, GitHub follows a hierarchy. When a job runs in the "Production" environment, it will prioritize the Environment Secret over the Repository Secret. This allows you to use the same variable name in your code while GitHub swaps out the actual value based on where the code is going.
+
+</details>
+
 ## Store the Dokploy Webhook URL in GitHub Secrets
 
 1. From your Dokploy dashboard, get the webhook URL for your service (found in **Deployments**)
-2. Create another GitHub secret:
+2. Create another GitHub Repository secret:
    - `DOKPLOY_WEBHOOK_URL_SERVER`: Paste the webhook URL
 
 **Why secrets matter:** Storing credentials directly in your code (even in version control) is a security disaster. GitHub Secrets are encrypted and used only by CI/CD workflows. They never appear in logs or pull requests.
 
+<details>
+<summary>What about the other secrets?</summary>
+As you might have noted, the following variables were never manually defined in your settings:
+
+- `secrets.GITHUB_TOKEN`
+- `github.actor`
+- `github.repository`
+- `github.repository_owner`
+- `github.sha`
+
+These are "Built-in Contexts." GitHub automatically generates these for every single run so you don't have to.
+
+### The Automatic `GITHUB_TOKEN`
+
+GitHub provides a managed token specifically for your workflow.
+
+- **Auto-Generation:** At the start of every job, GitHub creates a unique installation access token.
+- **Auto-Expiration:** As soon as the job finishes, the token expires.
+- **Permission-Based:** In our YAML, we used the permissions block to tell GitHub exactly what this token is allowed to do (like `packages: write`). This allows the pipeline to log into GHCR and push images without you needing to create a "Personal Access Token" or store a password.
+
+### The GitHub Context
+
+Variables starting with `github.` are pieces of metadata about your repository and the specific event that triggered the pipeline:
+
+- `github.actor`: The username of the person who pushed the code (used as the Docker login username).
+- `github.repository`: The full name of your repo (e.g., user/myapp).
+- `github.sha`: The specific commit ID. We use this to "version" our Docker images so we can always roll back to a specific point in time.
+
+By using these built-in variables, your workflow becomes portable. You could copy this exact YAML file to a different repository, and it would work immediately without any configuration changes.
+
+</details>
 # Conclusion: Completing the Circle
 
 You have successfully built a complete, automated deployment pipeline:
