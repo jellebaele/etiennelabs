@@ -2,7 +2,8 @@
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Article } from '@/lib/articles';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -47,42 +48,46 @@ const ArticleSidebarItem = ({ article }: ArticleSidebarItemProps) => {
                 className={`flex-1 py-1 px-2 text-sm transition-colors rounded-md `}>
                 {article.meta.title}
               </Link>
-              {hasChildren &&
-                (isOpen ? (
-                  <ChevronDown
-                    size={16}
-                    className='mr-3'
-                  />
-                ) : (
-                  <ChevronRight
-                    size={16}
-                    className='mr-3'
-                  />
-                ))}
+              {hasChildren && (
+                <motion.div animate={{ rotate: isOpen ? 90 : 0 }}>
+                  <ChevronRight size={16} />
+                </motion.div>
+              )}
             </div>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent>
-          {article.children &&
-            article.children.map((child) => {
-              const isSubActive = currentPath === `/articles/${child.meta.slug}`;
 
-              return (
-                <div
-                  className={`flex items-center gap-2 w-full ${
-                    isSubActive
-                      ? 'text-primary font-bold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/10'
-                  }`}>
-                  <Link
-                    href={`/articles/${child.meta.slug}`}
-                    className={`flex-1 py-1 px-6 text-sm transition-colors rounded-md `}>
-                    {child.meta.title}
-                  </Link>
-                </div>
-              );
-            })}
-        </CollapsibleContent>
+        <AnimatePresence initial={false}>
+          {isOpen && hasChildren && (
+            <CollapsibleContent
+              forceMount
+              asChild>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className='overflow-hidden flex flex-col border-l-2 border-foreground/10 ml-4 mt-1'>
+                {article.children?.map((child) => {
+                  const isSubActive = currentPath === `/articles/${child.meta.slug}`;
+
+                  return (
+                    <Link
+                      key={child.meta.slug}
+                      href={`/articles/${child.meta.slug}`}
+                      className={`py-1.5 px-6 text-sm transition-colors rounded-md ${
+                        isSubActive
+                          ? 'text-primary font-bold'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                      }`}>
+                      {child.meta.title}
+                    </Link>
+                  );
+                })}
+              </motion.div>
+            </CollapsibleContent>
+          )}
+        </AnimatePresence>
       </div>
     </Collapsible>
   );
