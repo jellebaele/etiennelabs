@@ -19,7 +19,7 @@ const cardVariants: Variants = {
   },
 };
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 type ArticleCardProps = {
   article: Article;
