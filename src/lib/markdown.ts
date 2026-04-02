@@ -25,10 +25,10 @@ const slugify = (text: string) =>
 
 export function getHeadings(content: string): Heading[] {
   // Regex to find lines starting with ## or ###
-  const headingLines = content.split('\n').filter((line) => line.match(/^#{1,2,3}\s/));
+  const headingLines = content.split('\n').filter((line) => line.match(/^#{1,3}\s/));
 
   return headingLines.map((line) => {
-    const text = line.replace(/^#{1,2,3}\s/, '');
+    const text = line.replace(/^#{1,3}\s/, '');
     return {
       text,
       level: line.startsWith('###') ? 3 : line.startsWith('##') ? 2 : 1,
