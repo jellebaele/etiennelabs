@@ -1,9 +1,10 @@
 export const siteConfig = {
   // Site identity
   name: 'ETIENNELAB',
-  title: 'Etienne Lab - Design & Code',
+  title: 'EtienneLab - Design & Code',
   tagline: ['Thoughts on design, code,', 'and everything in between.'],
   description: 'A blog exploring design systems, web development, and creative coding',
+  url: 'blog.jellebaele.com',
 
   // Author
   author: {

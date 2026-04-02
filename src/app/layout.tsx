@@ -1,6 +1,7 @@
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { cn } from '@/lib/utils';
+import { siteConfig } from 'config/site';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -9,8 +10,8 @@ import './globals.css';
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'etiennelab.dev',
-  description: 'A blog site',
+  title: siteConfig.url,
+  description: siteConfig.description,
 };
 
 export default function RootLayout({

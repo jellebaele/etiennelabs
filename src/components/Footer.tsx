@@ -16,7 +16,7 @@ const Footer = () => {
           <div>
             <div className='flex items-center gap-2 mb-4'>
               <div className='w-6 h-6 bg-primary' />
-              <span className='text-lg font-bold font-display'>ETIENNELABS</span>
+              <span className='text-lg font-bold font-display'>{siteConfig.name}</span>
             </div>
             <div className='text-sm text-muted-foreground font-mono leading-relaxed'>
               {siteConfig.tagline.map((line, index) => {
