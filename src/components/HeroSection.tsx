@@ -29,7 +29,7 @@ const HeroSection = () => {
               {siteConfig.description}
             </p>
 
-            <div className='flex sm:flex-row flex-col gap-4 pt-2'>
+            <div className='flex gap-4 pt-2'>
               <Link
                 href='/articles'
                 className='bg-primary text-primary-foreground retro-shadow px-6 py-3 font-mono text-sm uppercase tracking-wider hover:-translate-y-0.5 transition-transform border-2 border-foreground'>
