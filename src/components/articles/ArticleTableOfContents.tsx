@@ -1,7 +1,8 @@
 'use client';
 
 import { Heading } from '@/lib/markdown';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
@@ -25,54 +26,69 @@ const ArticleTableOfContents = ({ headings }: ArticleTableOfContentsProps) => {
             <p className='font-mono uppercase text-sm font-bold tracking-widest text-primary'>
               Table of contents
             </p>
-            {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <motion.div animate={{ rotate: isOpen ? 90 : 0 }}>
+              <ChevronRight size={18} />
+            </motion.div>
           </div>
         </CollapsibleTrigger>
 
-        <CollapsibleContent>
-          <div className='border-t-2 mx-4 pb-2' />
-          <div className='flex flex-col gap-1'>
-            {headings.map((heading) => {
-              const indent = (heading.level - 1) * 16;
+        <AnimatePresence>
+          {isOpen && (
+            <CollapsibleContent
+              forceMount
+              asChild>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className='overflow-hidden'>
+                <div className='border-t-2 mx-4 pb-2' />
+                <div className='flex flex-col gap-1'>
+                  {headings.map((heading) => {
+                    const indent = (heading.level - 1) * 16;
 
-              return (
-                <div
-                  key={heading.id}
-                  style={{ paddingLeft: `${indent}px` }}
-                  className='group flex items-center gap-2'>
-                  <span className='text-primary opacity-0 group-hover:opacity-100 transition-opacity font-mono shrink-0'>
-                    {'>'}
-                  </span>
-                  <a
-                    href={`#${heading.id}`}
-                    className={`text-sm font-mono transition-colors ${
-                      heading.level === 1
-                        ? 'font-bold text-foreground'
-                        : 'text-muted-foreground hover:text-primary'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const element = document.getElementById(heading.id);
-                      if (element) {
-                        const offset = 80;
-                        const bodyRect = document.body.getBoundingClientRect().top;
-                        const elementRect = element.getBoundingClientRect().top;
-                        const elementPosition = elementRect - bodyRect;
-                        const offsetPosition = elementPosition - offset;
+                    return (
+                      <div
+                        key={heading.id}
+                        style={{ paddingLeft: `${indent}px` }}
+                        className='group flex items-center gap-2'>
+                        <span className='text-primary opacity-0 group-hover:opacity-100 transition-opacity font-mono shrink-0'>
+                          {'>'}
+                        </span>
+                        <a
+                          href={`#${heading.id}`}
+                          className={`text-sm font-mono transition-colors ${
+                            heading.level === 1
+                              ? 'font-bold text-foreground'
+                              : 'text-muted-foreground hover:text-primary'
+                          }`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(heading.id);
+                            if (element) {
+                              const offset = 80;
+                              const bodyRect = document.body.getBoundingClientRect().top;
+                              const elementRect = element.getBoundingClientRect().top;
+                              const elementPosition = elementRect - bodyRect;
+                              const offsetPosition = elementPosition - offset;
 
-                        window.scrollTo({
-                          top: offsetPosition,
-                          behavior: 'smooth',
-                        });
-                      }
-                    }}>
-                    {heading.text}
-                  </a>
+                              window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth',
+                              });
+                            }
+                          }}>
+                          {heading.text}
+                        </a>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </CollapsibleContent>
+              </motion.div>
+            </CollapsibleContent>
+          )}
+        </AnimatePresence>
       </Collapsible>
     </div>
   );
