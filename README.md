@@ -27,3 +27,4 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 - [x] Docker support
 - [ ] deploy
 - [ ] sidebar opening children
+- [ ] Table of contents

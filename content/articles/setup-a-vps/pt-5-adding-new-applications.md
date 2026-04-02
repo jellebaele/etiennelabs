@@ -152,7 +152,7 @@ If you already have a tunnel running on your VPS, you can simply add a new route
    $ docker service ls
    ```
 
-   The internal address will follow the format http://<service_name>:<port>.
+   The internal address will follow the format `http://<service_name>:<port>`.
 
    <details>
     <summary>Technical Note: Service Hashing</summary>
