@@ -28,4 +28,4 @@ A modern, high-performance blog engine built with Next.js and shadcn/ui. This re
 - [x] Docker support
 - [x] deploy
 - [x] sidebar opening children
-- [ ] Table of contents blog
+- [x] Table of contents blog
