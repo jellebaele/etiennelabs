@@ -10,7 +10,7 @@ import './globals.css';
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: siteConfig.url,
+  title: siteConfig.title,
   description: siteConfig.description,
 };
 
