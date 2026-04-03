@@ -1,19 +1,16 @@
 export const siteConfig = {
-  // Site identity
   name: 'ETIENNELAB',
-  title: 'EtienneLab - Design & Code',
-  tagline: ['Thoughts on design, code,', 'and everything in between.'],
-  description: 'A blog exploring design systems, web development, and creative coding',
+  title: 'Etiennelab — Ideas & Code',
+  tagline: 'Notes on building and learning as a developer.',
+  description: 'A personal blog about building software, learning, and turning ideas into reality.',
   url: 'blog.jellebaele.com',
 
-  // Author
   author: {
     name: 'Jelle Baele',
     email: 'jelle@etiennelab.dev',
     role: 'Developer & Designer',
   },
 
-  // Navigation
   navigation: [
     { label: 'Home', href: '/' },
     { label: 'Articles', href: '/articles' },

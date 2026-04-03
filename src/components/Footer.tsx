@@ -19,14 +19,7 @@ const Footer = () => {
               <span className='text-lg font-bold font-display'>{siteConfig.name}</span>
             </div>
             <div className='text-sm text-muted-foreground font-mono leading-relaxed'>
-              {siteConfig.tagline.map((line, index) => {
-                return (
-                  <p key={index}>
-                    {line}
-                    <br />
-                  </p>
-                );
-              })}
+              {siteConfig.tagline}
             </div>
           </div>
 

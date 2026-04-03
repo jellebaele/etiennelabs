@@ -1,17 +1,17 @@
-Hi, I'm Jelle Baele, a Software Engineer passionate about clean code, scalable architecture, and the tiny details that make a big difference in the user experience.
+Hi, I’m Jelle Baele, a software engineer passionate about clean code, scalable architecture, and the details that make software truly solid.
 
-I built this blog as a space to document my exploration of the modern technology landscape. My goal is to bridge the gap between high-level architectural theory and the low-level optimizations that drive performance. Whether I'm dissecting a complex system design or refining a small UI interaction, I believe that the best software is built with both technical rigor and a focus on the human end-user.
+I created this blog as a place to document my journey through modern software development. My goal is to bridge the gap between high-level architectural thinking and the low-level decisions that shape real-world systems. Whether it’s breaking down a complex design or refining an implementation, I’m interested in how things actually work in practice.
 
 ## The Philosophy Behind This Blog
 
-Engineering is a continuous journey of learning and unlearning. I treat this site as a living "documentation-first" project—a place where every article serves as a permanent reference point for common challenges we face as developers.
+Engineering is a continuous journey of learning and unlearning. I treat this site as a living "documentation-first" project. A place where every article serves as a permanent reference point for common challenges we face as developers.
 
-By using a custom-built Markdown engine integrated with shadcn/ui, I’ve created a technical environment that mirrors the tools I use in my daily work, allowing for interactive code switching and deep-dive sections.
+This site is also part of that process. It’s built with a custom Markdown setup and modern tooling, reflecting the way I like to work: structured, practical, and focused on clarity.
 
 <details>
 <summary>The "Build vs. Buy" Decision</summary>
 
-I chose to build this platform from scratch using Next.js rather than a standard CMS. This allowed me to fine-tune the rendering of technical components like these collapsible sections, ensuring the reading experience is as precise as the code itself.
+I chose to build this platform from scratch using Next.js rather than a standard CMS. This allowed me to fine-tune the rendering of technical components, just like these collapsible sections, ensuring the reading experience is as precise as the code itself.
 
 </details>
 
