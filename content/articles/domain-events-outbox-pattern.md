@@ -1,6 +1,6 @@
 ---
 title: 'Domain Events with the Outbox Pattern'
-date: '2026-03-07'
+date: '2026-03-12'
 tags: ['Design patterns']
 excerpt: 'How to handle dual-write challenges and guarantee consistency using the Outbox Pattern.'
 ---
