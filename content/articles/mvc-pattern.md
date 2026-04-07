@@ -20,7 +20,10 @@ However, in more complex applications, strictly adhering to these three layers c
 # Components of MVC
 
 The MVC pattern is built around three core components, each with a clearly defined responsibility. Together, they form a structure that separates concerns and promotes maintainability.
-![MVC model](/images/articles/mvc-pattern/MVC-diagram.png)
+
+<p align="center">
+  <img src="/images/articles/mvc-pattern/MVC-diagram.png" alt="MVC Model"/>
+</p>
 
 <details>
 <summary>Why some diagrams show View → Model</summary>
