@@ -191,6 +191,33 @@
   h3:hover .subtle-anchor {
     @apply opacity-100;
   }
+
+  .prose blockquote {
+    border-left: 4px solid hsl(var(--primary));
+    padding-left: 1rem;
+    font-style: normal;
+    font-weight: normal;
+    color: hsl(var(--muted-foreground));
+    background: transparent;
+    quotes: none;
+  }
+
+  .prose blockquote p {
+    font-style: normal;
+    font-weight: normal;
+  }
+
+  .prose blockquote strong {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .prose
+    :where(blockquote p:first-of-type):not(
+      :where([class~='not-prose'], [class~='not-prose'] *)
+    ):before {
+    content: '' !important;
+  }
 }
 
 @layer components {
