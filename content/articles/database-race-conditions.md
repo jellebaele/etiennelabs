@@ -5,8 +5,6 @@ tags: ['Backend', '.Net']
 excerpt: 'A technical guide to identifying and mitigating concurrency conflicts through isolation levels and locking strategies.'
 ---
 
-# Intro
-
 In a perfect world, database transactions would happen in total isolation. But in modern, high-concurrency applications, thousands of users often attempt to read and write to the same data simultaneously. When the outcome of these operations depends on the specific timing or sequence of events, you have a Race Condition.
 
 Without proper management, these races lead to data corruption, financial discrepancies, and a poor user experience. Whether you are building a simple registration form or a global e-commerce checkout, understanding how to prevent these conflicts is a fundamental skill for any software engineer.

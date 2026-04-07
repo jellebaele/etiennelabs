@@ -5,8 +5,6 @@ tags: ['Design patterns']
 excerpt: 'Explicitly model expected failures and maintain predictable error handling with the Result Pattern.'
 ---
 
-# Intro
-
 Error handling is a critical architectural decision that affects how maintainable and predictable your code becomes. In C#, exceptions are a powerful feature, but using them for regular control flow can lead to unclear contracts, tightly coupled code, and code that is difficult to reason about. The Result pattern offers an explicit and predictable alternative for handling expected failures—making error cases first-class citizens of your return types.
 
 This guide explores when to use exceptions, when to use the Result pattern, and why this distinction matters for building robust applications.

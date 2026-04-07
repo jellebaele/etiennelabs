@@ -5,8 +5,6 @@ tags: ['Design patterns']
 excerpt: 'How to handle dual-write challenges and guarantee consistency using the Outbox Pattern.'
 ---
 
-# Intro
-
 The outbox pattern is a powerful technique for ensuring reliability when business transactions need to trigger side
 effects like API calls, email notifications, or internal asynchronous workflows.
 

@@ -5,8 +5,6 @@ tags: ['Design patterns']
 excerpt: 'Centralize transaction management to ensure atomic operations, consistent data, and predictable application behavior with the Unit of Work pattern.'
 ---
 
-# Intro
-
 Managing data consistency across multiple operations is a fundamental challenge in application design. When multiple repositories and changes are involved in a single business operation, ensuring everything either succeeds or fails together becomes critical. Without a clear strategy, you risk partial updates, inconsistent data, and hard-to-debug issues.
 
 The Unit of Work pattern provides a structured way to group related operations into a single transaction. It ensures that all changes are committed together—or rolled back entirely—bringing predictability and consistency to your data layer.
