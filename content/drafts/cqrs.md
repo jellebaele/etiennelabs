@@ -1,14 +1,24 @@
-## CQRS
+---
+title: 'CQRS-Pattern'
+date: '2026-04-13'
+tags: ['Design patterns']
+excerpt: 'CQRS is a spectrum, not a binary choice. Learn how to evolve your architecture from simple logical separation in code to fully independent data stores.'
+---
 
-[CQRS Pattern - Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs)
+# Intro
 
-[Command Query Separation | Object-Oriented Design Principles w/ TypeScript | Khalil Stemmler](https://khalilstemmler.com/articles/oop-design-principles/command-query-separation/)
+In traditional architectures, we often force a single model to handle two opposing jobs: processing complex business logic and serving high-speed UI views. As systems grow, this "one size fits all" approach creates bloated entities and performance bottlenecks.
 
-Command Query Responsibility Segregation (CQRS) is a design pattern that separates read and write operations for a data store into distinct models. Instead of using a single model to both change and query data, CQRS enforces a clear division between commands (writes) and queries (reads).
+Command Query Responsibility Segregation (CQRS) is the solution, but it’s often misunderstood as a "two-database-only" pattern. In reality, CQRS is a spectrum of separation that you can implement in stages:
 
-This separation allows each side to be optimized independently and can significantly improve performance, scalability, maintainability, and security, especially in complex domains.
+- **Logical Separation:** You keep your existing database but split your code into distinct paths:
+  - Rich Domain Models for Commands (Writes)
+  - Thin DTOs for Queries (Reads).
+- **Physical Separation:** You move the read and write models into entirely different databases (e.g., SQL for writes, NoSQL for reads) to handle extreme scale.
 
-### Context and problem
+By treating CQRS as a spectrum, you can start by simply cleaning up your project structure today, while leaving the door open for massive scalability tomorrow.
+
+# Context and problem
 
 In traditional architectures, a single data model is often used for both read and write operations. This approach is simple and works well for basic CRUD-style applications.
 
@@ -304,7 +314,7 @@ public class GetOrdersForCustomerHandler
 ✔ Optimized for UI
 ✔ Can use a different table or DB
 
-### Solution
+# Solution
 
 The idea of CQS is to separate the code paths for operations that change the system from those that simply request data from the system.
 
@@ -382,7 +392,7 @@ Because queries are isolated from business rules and invariants, they are:
 - Easier to optimize
 - Safe to cache aggressively
 
-### **Separate read models and write models**
+# **Separate read models and write models**
 
 Separating the read model from the write model allows each to be designed for its specific purpose:
 
@@ -459,7 +469,7 @@ The read data store can use its own data schema that's optimized for queries. Fo
   remain simple and focused on query efficiency.
 - **Simpler queries.** When you store a materialized view in the read database, the application can avoid complex joins when it queries.
 
-### Problems and considerations
+# Problems and considerations
 
 Consider the following points as you decide how to implement this pattern:
 
@@ -468,3 +478,10 @@ Consider the following points as you decide how to implement this pattern:
   requirement for CQRS, but you often use it to process commands and publish update events. When messaging is included, the system must account for potential problems such as message failures, duplicates, and retries. For more information about strategies to handle commands that have varying priorities, see [Priority queues](https://learn.microsoft.com/en-us/azure/architecture/patterns/priority-queue).
 - **Eventual consistency.** When the read databases and write databases are separated, the read data might not show the most recent changes immediately. This delay results in stale data. Ensuring
   that the read model store stays up-to-date with changes in the write model store can be challenging. Also, detecting and handling scenarios where a user acts on stale data requires careful consideration.
+
+# Conclusion
+
+# Sources
+
+- [CQRS Pattern - Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs)
+- [Command Query Separation | Object-Oriented Design Principles w/ TypeScript | Khalil Stemmler](https://khalilstemmler.com/articles/oop-design-principles/command-query-separation/)
