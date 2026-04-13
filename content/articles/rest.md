@@ -69,20 +69,23 @@ Statelessness is the secret to "web-scale" performance. Because the server doesn
 
 ## 3. Cacheability
 
-In a RESTful system, every response must explicitly label itself as cacheable or non-cacheable.
+In a RESTful system, every response should explicitly indicate whether it is cacheable or non-cacheable. This information is typically provided within the HTTP response headers, allowing clients and intermediaries to store data and improve overall system efficiency.
 
 **Why it matters:** This reduces the "chattiness" of the network. By allowing clients or intermediate proxies to reuse responses, you drastically decrease latency and server load.
 
 ## 4. Uniform Interface
 
-This is the most significant (and most frequently violated) constraint. It dictates that all clients must interact with the server in the same standardized way. It consists of four sub-parts:
+The Uniform Interface is the most significant (and most frequently violated) REST constraint. It dictates that all clients must interact with the server in a standardized way, decoupled from the backend implementation. It consists of four sub-constraints:
 
-- Identification of Resources: We interact with Resources (the "What"), not actions (the "How").
-  - Standard: `GET /articles/1`
-  - Non-REST: `GET /viewArticle?id=1`
-- Manipulation through Representations: The client holds a "representation" of the resource (like a JSON object). If it has permission, it can modify or delete the resource on the server using that representation.
-- Self-Descriptive Messages: Each message contains enough metadata for the receiver to know how to process it. This includes the HTTP method (GET, POST), status codes (200 OK, 404 Not Found), and Media Types (application/json).
-- HATEOAS (Hypermedia as the Engine of Application State): The server provides links that tell the client what it is allowed to do next.
+- **Identification of Resources:** A resource is any information that can be named and uniquely identified (usually via a URI). We interact with the resource (the "What") rather than the action (the "How").
+  - RESTful: `GET /articles/1`
+  - Non-RESTful: `GET /viewArticle?id=1`
+
+  **Note:** The Resource is conceptually separate from its Representation. For example, the resource is the data itself, while the representation is the format (JSON, XML, or HTML) sent to the client.
+
+- **Manipulation of Resources through Representations:** When a client holds a representation of a resource (including any attached metadata), it has enough information to modify or delete that resource on the server, provided it has the necessary permissions.
+- **Self-Descriptive Messages:** Each message contains all the information required for the receiver to process it. This includes the HTTP Method (`GET`, `DELETE`), Status Codes (`200 OK`, `404 Not Found`), and the Media Type (e.g., `Content-Type: application/json`), which tells the client how to parse the body.
+- **HATEOAS (Hypermedia as the Engine of Application State):** The server's response includes hypermedia links that dynamically inform the client about available actions or related resources. This allows the client to navigate the API without hardcoding every possible URL.
 
 ## 5. Layered System
 
