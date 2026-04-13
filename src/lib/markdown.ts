@@ -24,15 +24,27 @@ const slugify = (text: string) =>
     .replace(/[^\w-]+/g, '');
 
 export function getHeadings(content: string): Heading[] {
-  // Regex to find lines starting with ## or ###
-  const headingLines = content.split('\n').filter((line) => line.match(/^#{1,3}\s/));
+  const lines = content.split('\n');
+  const headings: Heading[] = [];
+  let isInsideCodeBlock = false;
 
-  return headingLines.map((line) => {
-    const text = line.replace(/^#{1,3}\s/, '');
-    return {
-      text,
-      level: line.startsWith('###') ? 3 : line.startsWith('##') ? 2 : 1,
-      id: slugify(text),
-    };
-  });
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      isInsideCodeBlock = !isInsideCodeBlock;
+      continue;
+    }
+
+    // Regex to find lines starting with ## or ###
+    if (!isInsideCodeBlock && line.match(/^#{1,3}\s/)) {
+      const text = line.replace(/^#{1,3}\s/, '').trim();
+
+      headings.push({
+        text,
+        level: line.startsWith('###') ? 3 : line.startsWith('##') ? 2 : 1,
+        id: slugify(text),
+      });
+    }
+  }
+
+  return headings;
 }
