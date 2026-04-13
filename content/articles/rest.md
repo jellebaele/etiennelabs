@@ -145,7 +145,7 @@ While they sound similar, a REST Resource and a DDD Aggregate are not always the
 In a Hexagonal setup, REST is simply one of many Inbound (Driving) Adapters.
 
 - The Port: The application defines an Inbound Port (like `PlaceOrder`).
-- The Adapter: The REST adapter (a controller) implements the logic to satisfy that port. It transforms the POST `/orders` request into the data the port expects.
+- The Adapter: The REST adapter (a controller) implements the logic to satisfy that port. It transforms the `POST /orders` request into the data the port expects.
 - Interchangeability: Because REST is just an adapter, you can add a GraphQL adapter or a gRPC adapter alongside it. They all point to the same core logic, but provide different "shapes" for different clients.
 
 # Alternatives to REST
