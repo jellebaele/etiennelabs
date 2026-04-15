@@ -1,5 +1,5 @@
 ---
-title: 'Dotnet setup: A Checlist'
+title: 'Dotnet setup: A Checklist'
 date: '2026-04-13'
 tags: ['.Net']
 excerpt: 'A professional guide to establishing a scalable .NET 10 foundation using centralized configurations and observability.'
