@@ -27,7 +27,6 @@ To eliminate redundancy and enforce a unified build strategy, implement a `Direc
       <AnalysisMode>All</AnalysisMode>
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
       <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-      <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 </Project>
 ```
@@ -106,7 +105,6 @@ Next, you can update the `Directory.Build.props` file, the analyzer is applied t
         <AnalysisMode>All</AnalysisMode>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     </PropertyGroup>
 
     <!-- Add these lines: -->
