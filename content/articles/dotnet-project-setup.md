@@ -30,6 +30,17 @@ To eliminate redundancy and enforce a unified build strategy, implement a `Direc
 </Project>
 ```
 
+In the `.csproj` file of your project, you can then remove the `TargetFramework` tags and so, so you end up with something like this:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+      <PackageVersion Include="Microsoft.AspNetCore.OpenApi" />
+    </ItemGroup>
+</Project>
+
+```
+
 <details>
 <summary>Pro-Tip: Managing Solution Items</summary>
 
@@ -156,7 +167,7 @@ dotnet_style_prefer_is_null_check_over_reference_equality_method = true:error
 csharp_indent_labels = one_less_than_current
 csharp_using_directive_placement = outside_namespace:error
 csharp_prefer_simple_using_statement = true:error
-csharp_prefer_braces = true:error
+csharp_prefer_braces = false:none
 csharp_style_namespace_declarations = file_scoped:error
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
@@ -187,9 +198,9 @@ dotnet_code_quality_unused_parameters = all:error
 csharp_style_namespace_declarations= file_scoped:error
 
 # var preferences
-csharp_style_var_elsewhere = false:error
-csharp_style_var_for_built_in_types = false:error
-csharp_style_var_when_type_is_apparent = true:error
+csharp_style_var_elsewhere = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
 
 # Expression-bodied members
 csharp_style_expression_bodied_accessors = true:error
@@ -214,7 +225,7 @@ csharp_prefer_static_local_function = true:error
 csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async
 
 # Code-block preferences
-csharp_prefer_braces = true:error
+csharp_prefer_braces = false:none
 csharp_prefer_simple_using_statement = true:error
 
 # Expression-level preferences
