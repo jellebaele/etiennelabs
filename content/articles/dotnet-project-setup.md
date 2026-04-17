@@ -7,6 +7,8 @@ excerpt: 'A professional guide to establishing a scalable .NET 10 foundation usi
 
 A well-architected .NET solution begins with a foundation that prioritizes consistency, maintainability, and observability. While default templates offer a starting point, enterprise-grade development requires a more deliberate configuration. This guide outlines a comprehensive checklist for initializing a modern .NET 10 project using industry best practices.
 
+**Note:** The solution may not build successfully until step 6 is completed, as earlier steps introduce dependencies that are resolved later in the setup.
+
 # 1. Solution Initialization and Port Standardization
 
 Effective local development starts with an Empty Solution to maintain full control over the folder structure. Upon adding an ASP.NET Core API project, the first step is to standardize communication ports within the `launchSettings.json` file. Utilizing fixed ports—such as 5000 (HTTP) and 5001 (HTTPS)—simplifies cross-service communication and Docker networking configurations.
@@ -35,7 +37,7 @@ In the `.csproj` file of your project, you can then remove the `TargetFramework`
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-      <PackageVersion Include="Microsoft.AspNetCore.OpenApi" />
+      <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     </ItemGroup>
 </Project>
 
@@ -59,22 +61,40 @@ Managing NuGet dependencies individually across projects often leads to version 
 
 ```xml
 <Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.23.0.137933" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    </ItemGroup>
 </Project>
+
 ```
+
+With CPM enabled, version definitions are centralized in this file rather than specified per project. This means you should remove any `Version="..."` attributes from your project (.csproj) files, allowing them to inherit the versions defined here.
+
+This approach keeps dependency management clean, consistent, and easier to maintain across the entire solution.
 
 </br>
 
 # 4. Integrating Static Code Analysis
 
-To maintain high code quality, SonarAnalyzer can be injected globally. By updating the `Directory.Build.props` file, the analyzer is applied to all C# projects while automatically excluding infrastructure-specific projects like Docker Compose:
+TTo maintain a high level of code quality across the solution, you can integrate static code analysis using SonarAnalyzer. Instead of configuring it per project, it’s preferable to apply it centrally so that all projects benefit from the same ruleset.
+
+Start by installing the SonarAnalyzer.CSharp NuGet package at the solution level.
+
+Once added, remove the package reference from individual project files (such as your API project), so they remain clean and rely on the centralized configuration:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    </ItemGroup>
+</Project>
+```
+
+Next, you can update the `Directory.Build.props` file, the analyzer is applied to all C# projects while automatically excluding infrastructure-specific projects like Docker Compose:
 
 ```xml
 <Project>
@@ -97,7 +117,6 @@ To maintain high code quality, SonarAnalyzer can be injected globally. By updati
         </PackageReference>
     </ItemGroup>
 </Project>
-
 ```
 
 </br>
@@ -563,7 +582,7 @@ app.MapControllers();
 await app.RunAsync();
 ```
 
-</br>
+With this configuration in place, the solution should now build successfully.
 
 # 7. Containerization
 
