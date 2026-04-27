@@ -5,8 +5,6 @@ tags: ['Design patterns']
 excerpt: 'CQRS is a spectrum, not a binary choice. Learn how to evolve your architecture from simple logical separation in code to fully independent data stores.'
 ---
 
-# Intro
-
 In traditional architectures, we often force a single model to handle two opposing jobs: processing complex business logic and serving high-speed UI views. As systems grow, this "one size fits all" approach creates bloated entities and performance bottlenecks.
 
 Command Query Responsibility Segregation (CQRS) is the solution, but it’s often misunderstood as a "two-database-only" pattern. In reality, CQRS is a spectrum of separation that you can implement in stages:

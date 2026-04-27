@@ -604,14 +604,30 @@ Container support is essential for modern deployment pipelines.
 
 # 8. Distributed Tracing and Metrics
 
-Observability is a first-class citizen in modern cloud-native applications. Integrating OpenTelemetry allows for the seamless collection of traces, metrics, and logs. Register the instrumentation in `Program.cs`:
+Observability is a first-class citizen in modern cloud-native applications. By integrating OpenTelemetry, you enable seamless collection of traces, metrics, and logs across your application.
+
+Start by installing the required NuGet packages in your API project:
+
+- `OpenTelemetry.Extensions.Hosting`,
+- `OpenTelemetry.Instrumentation.Http`,
+- `OpenTelemetry.Exporter.OpenTelemtryProtocol`
+- `OpenTelemetry.Instrumentation.AspNetCore`
+- `OpenTelemetry.Instrumentation.Runtime`
+- _(Optional)_ If you are using PostgreSQL: Npgsql.OpenTelemetry
+
+Next, register the instrumentation in `Program.cs`:
 
 ```cs
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+
+// Add these lines:
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(builder.Environment.ApplicationName))
     .WithTracing(tracing => tracing
         .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation())
+        .AddNpgsql())
     .WithMetrics(metrics => metrics
         .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation()
@@ -623,6 +639,8 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeFormattedMessage = true;
     options.IncludeScopes = true;
 });
+
+// ...
 ```
 
 ## Visualization with Aspire Dashboard
@@ -649,7 +667,7 @@ services:
       - '18888:18888'
 ```
 
-## Visualizatoin with Seq
+## Visualization with Seq
 
 ```yml
 services:
