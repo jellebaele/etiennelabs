@@ -5,6 +5,7 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
+import Mermaid from './Mermaid';
 
 type MarkdownProps = {
   children: string;
@@ -39,6 +40,13 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
+
+            // Handle Mermaid
+            if (match && match[1] === 'mermaid') {
+              return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+            }
+
+            // Handle standard codeblocks
             if (match) {
               return (
                 <SyntaxHighlighter
@@ -51,6 +59,8 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
                 </SyntaxHighlighter>
               );
             }
+
+            // Handle inline code
             return (
               <code
                 style={{
