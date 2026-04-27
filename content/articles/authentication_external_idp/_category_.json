@@ -1,0 +1,6 @@
+{
+  "title": "Authentication with an external IdP in .Net",
+  "date": "2026-04-27",
+  "tags": [".Net", "Security"],
+  "excerpt": "Are you storing client secrets in your frontend? Discover the security pitfalls of modern authentication flows and why the Backend for Frontend (BFF) pattern is the gold standard for secure, professional apps."
+}
