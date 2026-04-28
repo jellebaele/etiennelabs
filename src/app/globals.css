@@ -258,6 +258,7 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+
   .mermaid-container .mermaid svg {
     background-color: hsl(var(--background));
     padding: 2rem;

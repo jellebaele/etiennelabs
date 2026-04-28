@@ -7,22 +7,26 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
-  themeVariables: {
-    background: 'hsl(var(--background))',
-  },
 });
 
 const Mermaid = ({ chart }: { chart: string }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (ref.current) {
-      ref.current.innerHTML = chart;
+    if (!ref.current) return;
 
-      mermaid.run({ nodes: [ref.current] }).catch((err) => {
+    const renderChart = async () => {
+      try {
+        const mermaidId = `mermaid-${new Date().getTime()}`;
+        const { svg } = await mermaid.render(mermaidId, chart);
+
+        ref.current!.innerHTML = svg;
+      } catch (err) {
         console.error('Mermaid rendering failed:', err);
-      });
-    }
+      }
+    };
+
+    renderChart();
   }, [chart]);
 
   return (
