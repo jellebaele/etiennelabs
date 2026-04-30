@@ -9,9 +9,9 @@ In this part, we move from manual testing to a fully functional application. We 
 
 The goal is to create a seamless authentication flow where:
 
-- The Back-end (.NET): Acts as a secure Resource Server, validating incoming tokens and exposing protected data.
-- The Front-end (React): Handles the user's login lifecycle, stores the identity context, and securely communicates with our API.
-- The Observability Layer: We will use OpenTelemetry and Jaeger to visualize the "silent handshake" that happens when our API talks to Auth0 to verify those tokens.
+- **The Back-end (.NET):** Acts as a secure Resource Server, validating incoming tokens and exposing protected data.
+- **The Front-end (React):** Handles the user's login lifecycle, stores the identity context, and securely communicates with our API.
+- **The Observability Layer:** We will use OpenTelemetry and Jaeger to visualize the "silent handshake" that happens when our API talks to Auth0 to verify those tokens.
 
 By the end of this chapter, you’ll have a working end-to-end system where a user can log into a browser, and your backend can verify exactly who they are—all while observing the process under the hood.
 
@@ -376,7 +376,7 @@ export default App;
 When a user clicks "Login", the application redirects them to the Auth0 authentication endpoint. Inspecting the browser's network tab reveals the query parameters used during the authorization request. E.g.:
 
 ```bash
-GET <YOUR_DOMAIN>>/authorize
+GET <YOUR_DOMAIN>/authorize
   ?client_id=<CLIENT_ID>
   &scope=openid+profile+email
   &redirect_uri=http%3A%2F%2Flocalhost%3A5173
