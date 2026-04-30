@@ -191,12 +191,10 @@ public static class AuthenticationEndpoints
     private static IResult GetPrivate(ClaimsPrincipal user)
     {
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var name = user.Identity?.Name;
 
         return Results.Ok(new
         {
             message = "This is a protected endpoint - authentication required!",
-            user = name,
             userId = userId,
             allClaims = user.Claims.Select(c => new { c.Type, c.Value }),
             timestamp = DateTime.UtcNow
@@ -244,3 +242,199 @@ Because .NET caches these security keys in memory, a second request to the same 
 This demonstrates the efficiency of OIDC: we get the security of an external Identity Provider with the performance of local token validation.
 
 ## Front-end
+
+Setting up the frontend is straightforward by utilizing the Auth0 React SDK, which encapsulates the complexity of token management and the PKCE flow.
+
+### Setup entry point
+
+First, we need to register the Auth0Provider in our entry point (`main.tsx` or `main.jsx`). This ensures that the authentication context is available throughout the application.
+
+```ts
+import { Auth0Provider } from '@auth0/auth0-react';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Auth0Provider
+      domain={import.meta.env.VITE_AUTH0_DOMAIN}
+      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        audience: import.meta.env.VITE_AUTH0_ADIENCE,
+      }}>
+      <App />
+    </Auth0Provider>
+  </StrictMode>,
+);
+
+```
+
+### Configure Environment Variables
+
+Before initializing the component, make sure your `.env` file in the root of your project contains the correct variables corresponding to the Auth0 configuration. This could be something like this:
+
+```bash
+VITE_AUTH0_DOMAIN=your-domain.auth0.com
+VITE_AUTH0_CLIENT_ID=your-client-id
+VITE_AUTH0_AUDIENCE=https://localhost:5003
+```
+
+**Note on Client Configuration:** Ensure that the application's Callback URL (e.g., `http://localhost:5173`), Logout URL, and Allowed Web Origins are added to the Auth0 dashboard for the correct environment.
+
+### Implementation
+
+In your `App.tsx` file, implement the login and retrieval logic using the `useAuth0` hook. We use `getAccessTokenSilently()` to retrieve the Bearer token for accessing our private .NET API.
+
+```ts
+import { useAuth0 } from '@auth0/auth0-react';
+import { useState } from 'react';
+
+function App() {
+  const [apiUser, setApiUser] = useState<object | null>(null);
+
+  const {
+    isLoading, // Loading state, the SDK needs to reach Auth0 on load
+    isAuthenticated,
+    error,
+    loginWithRedirect, // Starts the login flow
+    logout: auth0Logout, // Starts the logout flow
+    user, // User profile
+    getAccessTokenSilently,
+  } = useAuth0();
+
+  const login = () => {
+    loginWithRedirect();
+  };
+
+  const signup = () => {
+    loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } });
+  };
+
+  const logout = () => {
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
+  const fetchPrivateInfo = async () => {
+    try {
+      // 1. Get the token from the SDK
+      // This will either return a cached token or refresh it silently
+      const token = await getAccessTokenSilently();
+
+      // 2. Call your .NET API
+      const response = await fetch('https://localhost:5003/api/private', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      setApiUser(data);
+    } catch (e) {
+      console.error('Error accessing API:', e);
+    }
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  return isAuthenticated && user ? (
+    <>
+      <p>Logged in as {user.email}</p>
+      <h1>User Profile</h1>
+      <pre>{JSON.stringify(user, null, 2)}</pre>
+      {apiUser && (
+        <div>
+          <h3>Response:</h3>
+          <pre>{JSON.stringify(apiUser, null, 2)}</pre>
+        </div>
+      )}
+      <button onClick={logout}>Logout</button>
+      <button onClick={fetchPrivateInfo}>Fetch private api</button>
+    </>
+  ) : (
+    <>
+      {error && <p>Error: {error.message}</p>}
+
+      <button onClick={signup}>Signup</button>
+      <button onClick={login}>Login</button>
+    </>
+  );
+}
+
+export default App;
+
+```
+
+### Activating the PKCE Flow
+
+When a user clicks "Login", the application redirects them to the Auth0 authentication endpoint. Inspecting the browser's network tab reveals the query parameters used during the authorization request. E.g.:
+
+```bash
+GET <YOUR_DOMAIN>>/authorize
+  ?client_id=<CLIENT_ID>
+  &scope=openid+profile+email
+  &redirect_uri=http%3A%2F%2Flocalhost%3A5173
+  &audience=https%3A%2F%2Flocalhost%3A5003
+  &response_type=code
+  &response_mode=query
+  &state=Z1V0NkJFOTZ4bERiWmI3cGFDb29Rei55SVY1N0tVdy1ZXzZBWjZJVHBkMQ%3D%3D
+  &nonce=TWUuN3R4S2hReHE1aGhlUG8yM2I1cUREdWVvaDNkRld%2BSVR1Z3VlSjVfdg%3D%3D
+  &code_challenge=Ncf5sLBs5qFlJHIJxhMRU_S0OAkILF0861GpY0jRinc
+  &code_challenge_method=S256
+  &auth0Client=<AUTH0_CLIENT_ID>
+```
+
+Parameter Breakdown:
+
+- `client_id`: Identifies your client application in Auth0.
+- `scope`: Specifies the permissions requested by the application (e.g., openid, profile, email).
+- `redirect_uri`: The location where Auth0 sends the user after authentication.
+- `audience`: The identifier of the protected API (Resource Server) you want to access.
+- `response_type`: Set to code to indicate usage of the Authorization Code flow.
+- `state`: A random string generated by the SDK to prevent Cross-Site Request Forgery (CSRF) attacks.
+- `code_challenge / code_challenge_method`: The hashed representation of the secret generated for PKCE verification (S256).
+
+### Accessing the Protected API
+
+After successfully logging in, the frontend can request the protected endpoint. The Access Token is automatically appended to the request to the Authorization header.
+
+```bash
+GET https://localhost:5003/api/private
+Authorization: Bearer <your-access-token>
+```
+
+The .NET Resource Server will validate the token using locally cached public keys (JWKS) and return a successful JSON payload.
+
+# Security Considerations
+
+While the architecture implemented, a Single-Page Application (SPA) communicating directly with a Resource Server via an Access Token, is widely used in tutorials and initial implementations, it introduces specific security considerations in production environments.
+
+## The Security Gap
+
+In this setup, the frontend application running in the user's browser handles the access token:
+
+- Token Exposure: The token must be read and held by the JavaScript application in the browser.
+- XSS Vulnerabilities: If a malicious third-party script or dependency runs on the page, it could potentially read the token from memory or storage and use it to access the API.
+- Client-Side Attacks: Public clients like React SPAs operate in an environment entirely accessible to the user, making token protection complex.
+
+## Industry Standard: Backend for Frontend (BFF)
+
+To mitigate these risks and shift security-sensitive operations back to the server, enterprise architectures frequently use the Backend for Frontend (BFF) pattern.
+
+The core principle of this pattern is to keep all tokens entirely outside the client application. The React application communicates only with its own secured API layer (the BFF) using `HttpOnly`, Secure cookies. The BFF then manages the tokens and forwards authenticated requests to the backend resources.
+
+# Conclusion
+
+This implementation gives us a working, standards-based authentication flow between the Single-Page Application and the .NET API. However, securing this system for enterprise production scenarios requires additional layers of defense.
+
+In the next part of this series, we will evolve our architecture by:
+
+- Introducing the BFF pattern using .NET.
+- Securing our token exchange process on the backend.
+- Managing sessions without exposing tokens to the client.
