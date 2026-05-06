@@ -3,7 +3,7 @@ title: 'Part 1: External Identity Provider Setup'
 position: 2
 ---
 
-Before implementing server-side architecture, it is essential to understand the underlying mechanics of the OAuth 2.0 Authorization Code flow. This article demonstrates how to configure an Identity Provider and highlights the inherent security limitations of client-side authentication.
+Before implementing our server-side architecture, it is essential to understand the underlying mechanics of the OAuth 2.0 Authorization Code flow. This article demonstrates how to configure an Identity Provider and highlights the inherent security limitations of client-side authentication.
 
 # Setting up the Provider (Auth0)
 
@@ -13,6 +13,8 @@ Auth0 serves as the example provider, although the principles below apply to any
 - Callback URL: Set the Allowed Callback URL to `https://oauth.pstmn.io/v1/callback` to facilitate testing via Postman.
 - API Definition: Navigate to the APIs section and define a new API. This establishes an Audience (e.g. `https://localhost:5001`), identifying the resource protected by the token.
 - Authorization: Ensure the application is granted permission to request access tokens for the defined API.
+
+Auth0 serves as the example provider, although the principles below apply to any OpenID Connect (OIDC)-compliant system.
 
 # Testing the Flow with Postman
 
@@ -156,26 +158,33 @@ By updating the Scope field in the Postman configuration to `openid profile emai
 
 This granular control demonstrates the power of OIDC, but it also reveals a significant architectural risk.
 
-# The Architectural Trap: Why "Public Clients" Can't Keep Secrets
+# The Security Boundary: Handling Public Clients
 
-The preceding testing required the use of a Client Secret. In the context of a Single Page Application (SPA) or mobile app, this creates a critical security vulnerability.
+During testing in Postman, we utilized both a Client ID and a Client Secret. However, in the context of a Single-Page Application (SPA) or mobile app, storing a Client Secret creates a critical security vulnerability.
 
-In OAuth 2.0 terminology, browsers and mobile applications are classified as "Public Clients." By definition, a public client is incapable of maintaining the confidentiality of a secret.
+In OAuth 2.0 terminology, browsers and mobile applications are classified as Public Clients. By definition, a public client is incapable of maintaining the confidentiality of a secret.
 
-## Why is it unsafe?
+## The Danger of Client-Side Secrets
 
-1. **Source Code Visibility:** Frontend code (HTML, CSS, JavaScript) is effectively public. Any credentials embedded within this code are accessible to any user via browser developer tools or "View Source."
-2. **Network Interception:** Even with obfuscation, network traffic is visible. An attacker can inspect the "Network" tab in the browser to identify request headers and payloads sent to the IdP, allowing the extraction of secrets and the simulation of the authentication handshake.
-3. **Impersonation:** Once a Client ID and Secret are compromised, an attacker can programmatically generate tokens on behalf of the application, bypassing all intended security controls.
+1. **Source Code Visibility:** Frontend code is effectively public. Any credentials embedded within this code are accessible to any user via browser developer tools.
+2. **Network Interception:** Network traffic is visible. An attacker can inspect the "Network" tab in the browser to identify request headers and payloads sent to the IdP.
+3. **Impersonation:** Once a Client Secret is compromised, an attacker can programmatically generate tokens on behalf of the application, bypassing all intended security controls.
 
-As noted by standards such as **OWASP** and the **IETF OAuth 2.1** specification, relying on client-side secret storage is prohibited.
+As noted by standards such as OWASP and the emerging IETF OAuth 2.1 specification, relying on client-side secret storage is prohibited.
 
 > "An SPA is deemed a public client since it cannot hold a secret. Such a secret would be part of the JavaScript loaded by the website and, thus, be accessible to anyone inspecting the source code." — [Best Practices: OAuth for Single Page Applications](https://curity.io/resources/learn/spa-best-practices/)
 
-Storing sensitive credentials on the client side converts a secure system into an open book. Authentication logic cannot rely on the client to handle secrets; this responsibility must be offloaded to a secure, server-side environment.
+## The Secure Approach: Public Client Architecture
 
-# The Path Forward: The BFF Pattern
+To keep the system secure, we rely on a stateless flow that does not require a client secret on the frontend:
 
-The testing phase confirms that the OAuth 2.0 authorization code flow is functional and correctly configured within the Identity Provider. However, as demonstrated, managing this authentication handshake in public clients introduces significant security challenges regarding secret storage.
+- **Use PKCE:** The application uses Proof Key for Code Exchange (PKCE) to securely acquire tokens without using a static client secret.
+- **Use In-Memory Token Storage:** The token is kept strictly in memory within the frontend state. It is never persisted to localStorage or disk.
 
-The next article in this series will cover the practical implementation of this standard authentication integration directly within a .NET application. It will examine the necessary configuration and code required to handle the login flow and retrieve user tokens without the use of an intermediary server-side architecture, laying the groundwork for more advanced security patterns in future installments.
+- **Delegated Verification:** The .NET API verifies the token mathematically using the IdP's public key, ensuring that the API only accepts tokens issued to the correct audience.
+
+# Conclusion
+
+By understanding the distinction between public and confidential clients, we can build a stateless authentication architecture that is both flexible and secure. We avoid the vulnerability of storing static secrets on the frontend by using PKCE, and we protect against XSS attacks by utilizing in-memory storage for our tokens.
+
+In the next part of this series, we will implement this architecture in both our .NET API and our React frontend, using OpenTelemetry to trace the validation process.

@@ -10,16 +10,12 @@ In this part, we move from manual testing to a fully functional application. We 
 The goal is to create a seamless authentication flow where:
 
 - **The Back-end (.NET):** Acts as a secure Resource Server, validating incoming tokens and exposing protected data.
-- **The Front-end (React):** Handles the user's login lifecycle, stores the identity context, and securely communicates with our API.
+- **The Front-end (React):** Handles the user's login lifecycle, ensures the session persists across page refreshes, and securely communicates with our API.
 - **The Observability Layer:** We will use OpenTelemetry and Jaeger to visualize the "silent handshake" that happens when our API talks to Auth0 to verify those tokens.
-
-By the end of this chapter, you’ll have a working end-to-end system where a user can log into a browser, and your backend can verify exactly who they are—all while observing the process under the hood.
 
 # How it works
 
-The authentication and authorization process is based on the OAuth 2.0 Authorization Code Flow with Proof Key for Code Exchange (PKCE). This standard ensures that the exchange of credentials and tokens is secure, even in public clients like a Single-Page Application (SPA) where the source code is accessible to the user.
-
-This flow is standard-based, meaning that once you understand this sequence, you can swap out Auth0 for Azure AD, Keycloak, or Okta, and the logic remains the same.
+The authentication and authorization process is based on the OAuth 2.0 Authorization Code Flow with Proof Key for Code Exchange (PKCE). This standard ensures that the exchange of credentials and tokens is secure, even in public clients like a Single-Page Application (SPA).
 
 The following diagram illustrates the interaction between the user, the React frontend, the Identity Provider (Auth0), and the .NET API.
 
@@ -263,13 +259,21 @@ createRoot(document.getElementById('root')!).render(
       authorizationParams={{
         redirect_uri: window.location.origin,
         audience: import.meta.env.VITE_AUTH0_ADIENCE,
-      }}>
+        scope: 'openid profile email offline_access',
+      }}
+      useRefreshTokens={true}
+      cacheLocation='localstorage'>
       <App />
     </Auth0Provider>
   </StrictMode>,
 );
-
 ```
+
+While storing tokens in localstorage traditionally posed an XSS risk, modern OAuth 2.0 standards allow this when combined with Refresh Token Rotation.
+
+Every time a token is refreshed, the old refresh token is invalidated and a new one is issued. If an attacker steals a token and uses it, Auth0 detects the reuse and immediately invalidates the entire token family, protecting the user's account automatically. This approach allows the application to survive page refreshes and browser restarts without relying on third-party cookies, which are increasingly blocked by modern browsers.
+
+Make sure you have these enabled in your IdP
 
 ### Configure Environment Variables
 
@@ -411,30 +415,37 @@ Authorization: Bearer <your-access-token>
 
 The .NET Resource Server will validate the token using locally cached public keys (JWKS) and return a successful JSON payload.
 
-# Security Considerations
+# Security Considerations: The Trade-off
 
-While the architecture implemented, a Single-Page Application (SPA) communicating directly with a Resource Server via an Access Token, is widely used in tutorials and initial implementations, it introduces specific security considerations in production environments.
+While our current architecture—a Single-Page Application (SPA) communicating directly with a Resource Server—is the standard for most modern web and mobile applications, it is important to understand where it sits on the security spectrum.
 
-## The Security Gap
+## Why this approach is Secure
 
-In this setup, the frontend application running in the user's browser handles the access token:
+We aren't just "throwing tokens in storage." We have implemented two critical defensive layers:
 
-- Token Exposure: The token must be read and held by the JavaScript application in the browser.
-- XSS Vulnerabilities: If a malicious third-party script or dependency runs on the page, it could potentially read the token from memory or storage and use it to access the API.
-- Client-Side Attacks: Public clients like React SPAs operate in an environment entirely accessible to the user, making token protection complex.
+1. **PKCE (Proof Key for Code Exchange):** This ensures that even if an attacker intercepts the authorization code in transit, they cannot exchange it for a token because they lack the "code verifier" held in your application's memory.
+2. **Refresh Token Rotation:** By using rotation, a stolen token has a "kill-switch." If an attacker uses a stolen refresh token, the Identity Provider detects the reuse and immediately invalidates the entire session for both the attacker and the legitimate user.
 
-## Industry Standard: Backend for Frontend (BFF)
+## The "Slightly Less" Part
 
-To mitigate these risks and shift security-sensitive operations back to the server, enterprise architectures frequently use the Backend for Frontend (BFF) pattern.
+The inherent risk in any "Public Client" (like a React app) is Token Exposure. Because the Access Token must be available to your JavaScript to make API calls, a sophisticated Cross-Site Scripting (XSS) attack could theoretically "scrape" the token from memory or localStorage.
 
-The core principle of this pattern is to keep all tokens entirely outside the client application. The React application communicates only with its own secured API layer (the BFF) using `HttpOnly`, Secure cookies. The BFF then manages the tokens and forwards authenticated requests to the backend resources.
+While a strong Content Security Policy (CSP) and modern SDKs make this very difficult, the tokens are technically within reach of the browser's JavaScript engine.
+
+## The Enterprise Alternative: Backend for Frontend (BFF)
+
+For applications handling highly sensitive data (like banking or healthcare), many organizations move to the Backend for Frontend (BFF) pattern.
+
+The core principle of the BFF is to keep tokens out of the browser entirely:
+
+- **Server-Side Handshake:** The .NET backend (the BFF) performs the OAuth handshake and receives the tokens.
+- **Encrypted Cookies:** The BFF stores the tokens in its own secure server-side session and sends an HttpOnly, Secure cookie to the React app.
+- **JavaScript Isolation:** Because the cookie is HttpOnly, the React application (and any malicious XSS scripts) cannot read it. The browser automatically attaches the cookie to requests, and the BFF swaps the cookie for the real Access Token before talking to the downstream API.
 
 # Conclusion
 
-This implementation gives us a working, standards-based authentication flow between the Single-Page Application and the .NET API. However, securing this system for enterprise production scenarios requires additional layers of defense.
+We have successfully implemented a robust, standards-based authentication flow. By utilizing Auth0, .NET, and React, we’ve built a system that handles identity securely while maintaining a high-performance, stateless backend.
 
-In the next part of this series, we will evolve our architecture by:
+This "Stateless Token" approach is the perfect balance of security and simplicity for the vast majority of projects. It allows your API to scale easily and supports multiple types of clients (Web, Mobile, and IoT) using the exact same logic.
 
-- Introducing the BFF pattern using .NET.
-- Securing our token exchange process on the backend.
-- Managing sessions without exposing tokens to the client.
+While the BFF pattern remains the ultimate defensive posture for high-security environments, you now have a production-ready foundation that follows modern security best practices like PKCE and Token Rotation.
