@@ -409,6 +409,6 @@ In our next article, we will tackle the next structural milestone: extending thi
 
 # Sources
 
-- https://technori.com/2026/03/24635-how-to-build-end-to-end-encryption-for-web-apps/editorial-team/
-- https://www.ibm.com/think/topics/end-to-end-encryption
-- https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+- [How to build End-to-End Encryption for web apps](https://technori.com/2026/03/24635-how-to-build-end-to-end-encryption-for-web-apps/editorial-team/)
+- [End-to-End Encryption](https://www.ibm.com/think/topics/end-to-end-encryption)
+- [Password storage cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
