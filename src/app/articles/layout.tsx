@@ -1,5 +1,6 @@
 import ArticleSidebar from '@/components/articles/sidebar/ArticleSidebar';
 import { getAllArticles } from '@/lib/articles';
+import 'katex/dist/katex.min.css';
 import { ReactNode } from 'react';
 
 type ArticleLayoutProps = {

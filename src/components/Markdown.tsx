@@ -2,9 +2,11 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import Mermaid from './Mermaid';
 
 type MarkdownProps = {
@@ -16,8 +18,9 @@ const Markdown = ({ children, showLineNumers = false }: MarkdownProps) => {
   return (
     <div className='prose max-w-none'>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[
+          rehypeKatex,
           rehypeRaw,
           rehypeSlug,
           [

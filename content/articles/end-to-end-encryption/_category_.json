@@ -1,0 +1,6 @@
+{
+  "title": "Zero-Knowledge Browser Architecture: Implementing Client-Side E2EE for Data Storage",
+  "date": "2026-06-08",
+  "tags": ["Cryptography", "Security", "Web Development"],
+  "excerpt": "A technical deep dive into building zero-knowledge web applications. Explore client-side symmetric key derivation using the Web Crypto API, secure storage via IndexedDB, and robust memory sanitation lifecycles."
+}
