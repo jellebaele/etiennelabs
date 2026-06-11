@@ -31,7 +31,25 @@ To bridge this gap, the browser passes the password through a Key Derivation Fun
 
 ## The Role of the `userSalt`
 
-A key derivation function cannot safely run on a password alone. It requires an accompaniment known as a cryptographic salt—a block of completely random data injected into the KDF alongside the password during the derivation process. The salt blocks two devastating mass-attack vectors:
+A key derivation function cannot safely run on a password alone. It requires an accompaniment known as a cryptographic salt, a block of completely random data injected into the KDF alongside the password during the derivation process.
+
+Crucially, this salt must be transmitted to and stored on your backend server, typically mapped directly to the user's global account profile, so it can be retrieved whenever the cryptographic key needs to be reconstructed. The salt serves two vital architectural purposes: resolving the multi-device dilemma and blocking mass-attack vectors.
+
+### 1. The Multi-Device Dilemma
+
+In a zero-knowledge system, your server never knows the user's master password or their Data Encryption Key (DEK). This means the client browser must recreate the DEK locally every single time a user logs in, clears their cache, or switches to a new device (like moving from a laptop to a phone).
+
+Because a KDF is a strict mathematical formula, inputting the same password with a different salt will output a completely different, incorrect key. If the salt were only saved locally on the initial device, a second device would have no way of knowing what salt to use, permanently locking the user out of their data.
+
+To allow seamless multi-device access, the server acts as the central repository for the user's salt. When a user logs in from any device, the flow operates at a profile level:
+
+1. The client sends the user's username or email to the server.
+2. The server looks up the user's account profile and returns the plaintext userSalt to the client.
+3. The client browser takes the master password typed by the user, combines it with the retrieved profile salt, and locally runs the 600 000 KDF loops to recreate the exact DEK needed to decrypt the database records.
+
+### 2. Defeating Mass Attacks
+
+Beyond enabling multi-device access, using a unique salt on the user's profile blocks two devastating mass-attack vectors if your database is ever compromised:
 
 - **The Mirror Effect:** If two entirely different users choose the exact same master password, a KDF without a salt spits out the exact same Data Encryption Key (DEK). If an attacker cracks one, they unlock both. A unique salt ensures identical passwords yield completely unique keys.
 - **Bulk Cracking (Rainbow Tables):** Attackers use massive, precomputed databases of popular passwords already run through millions of KDF variations to instantly match un-salted keys. A unique salt forces an attacker to throw away these precomputed tables. Even though they know the salt, they cannot batch their work. They are forced to manually recalculate those 600 000 hashing iterations from scratch individually for every single account in the database.
@@ -87,6 +105,33 @@ Even though the hacker knows all the salts, they must perform the 600 000-loop c
 
 ## Implementing Key Derivation and Salt Generation
 
+The diagram below maps out this dual-track initialization. Notice how the master password and a freshly generated, random salt pass through their respective structural transformations before merging inside the local PBKDF2 derivation loop, while the public salt simultaneously branches off to be safely archived on your backend server.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    %% Top Row (Inputs & Salt Generation)
+    GenSalt[Generate new<br>random salt]
+    Pass[Master password] --> Transform[Transform master<br>password into cryptokey]
+
+    %% Key Derivation Middle Layer
+    GenSalt -->|Salt| Derive
+    Transform -->|basekey| Derive[Create a non-extractable<br>data encryption key]
+
+    %% Storage Outflows
+    Server[("Backend Server<br>(User Profile Table)")]
+
+    GenSalt ==>|Transmit & Store| Server
+    %% Styling matching your sketch colors
+    style GenSalt fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Transform fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    style Derive fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Server fill:#eceff1,stroke:#37474f,stroke-width:2px,stroke-dasharray: 5 5
+```
+
+</div>
+
 When a user initializes their data vault for the first time, the client browser must generate the unique salt locally using a Cryptographically Secure Pseudorandom Number Generator (CSPRNG) before deriving the key:
 
 ```ts
@@ -116,7 +161,7 @@ async function deriveDataEncryptionKey(masterPassword, userSaltBase64) {
   );
 
   // Step B: Derive the final Data Encryption Key (DEK)
-  const dateEncryptionKey = await window.crypto.subtle.deriveKey(
+  const dataEncryptionKey = await window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
       salt: saltBuffer,
@@ -129,7 +174,7 @@ async function deriveDataEncryptionKey(masterPassword, userSaltBase64) {
     ['encrypt', 'decrypt'],
   );
 
-  return dateEncryptionKey;
+  return dataEncryptionKey;
 }
 ```
 
@@ -161,9 +206,27 @@ When you generate or derive a key via crypto.subtle, you can set the extractable
 
 ## Implementing Secure Key Storage
 
+Visually, this architecture establishes a strict, one-way security boundary. Once the derived key is written to IndexedDB with its extraction permission set to `false`, it becomes an opaque structured clone—fully usable by the browser's native cryptographic engine, but completely hidden from the JavaScript runtime and external inspection.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    Derive[Create a non-extractable<br>data encryption key]
+    IDB[("Session Store:<br>IndexedDB")]
+
+    Derive -->|Store DEK as non-extractable<br>structured clone| IDB
+
+    %% Styling matching your sketch colors
+    style Derive fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style IDB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+```
+
+</div>
+
 To implement this, you wrap the non-extractable `CryptoKey` inside a metadata wrapper object before saving it to IndexedDB.
 
-Here is how you could adapt the previous IndexedDB storage module to enforce a strict sliding timeout:
+Here is how you could adapt the previous IndexedDB storage module to enforce a sliding timeout:
 
 ```ts
 const DB_NAME = 'SecureVaultStorage';
@@ -240,17 +303,44 @@ To turn this into a truly bulletproof implementation, you should tie the TTL to 
 
 Once the data encryption key is established and safely held in memory or IndexedDB, the data pipeline follows a strict encrypt-before-send and decrypt-after-read pattern.
 
-```bash
-[Plaintext Input] -> [Encrypt (AES-GCM)] -> [Ciphertext Payload + IV] -> [Send to Server]
-[Server Database] -> [Fetch Ciphertext + IV] -> [Decrypt (AES-GCM)] -> [UI Render]
+## The Encryption Pipeline (Writing Data)
+
+Think of the encryption pipeline as a strict cryptographic assembly line. It ingests your plaintext string, encodes it into raw bytes, generates a completely unique 12-byte Initialization Vector (IV) to guarantee semantic security, and processes them through the AES-GCM engine before bundling them into a Base64 package safe for database storage.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    %% Inputs & Generation
+    Plain[Plaintext Input] --> Encode[Encode to bytes<br>TextEncoder]
+    GenIV[Generate unique 12-byte IV<br>window.crypto.getRandomValues]
+
+    %% Encryption Middle Layer
+    Encode -->|rawData| Encrypt
+    GenIV -->|iv| Encrypt
+    Key[Data Encryption Key<br>From IndexedDB/Memory] -->|dataEncryptionKey| Encrypt[Encrypt payload via AES-GCM]
+
+    %% Outflows & Transmit
+    Server[("Backend Server<br>(Encrypted Records Table)")]
+
+    Encrypt -->|ciphertextBuffer & iv| Package[Base64 Encode ciphertext & iv]
+
+    Package ==>|Transmit & Store Row| Server
+
+    %% Styling to match your previous sketch colors
+    style Plain fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    style GenIV fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Encrypt fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Package fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Server fill:#eceff1,stroke:#37474f,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
-## The Encryption Pipeline (Writing Data)
+</div>
 
 When saving records, you must avoid using the same key parameters repeatedly. We achieve semantic security using AES-GCM 256-bit encryption combined with a unique Initialization Vector (IV). The IV ensures that if a user encrypts the exact same text twice, it produces completely different ciphertext outputs, preventing patterns from leaking to the server.
 
 ```ts
-async function encryptPayload(plaintext, dateEncryptionKey) {
+async function encryptPayload(plaintext, dataEncryptionKey) {
   const encoder = new TextEncoder();
   const rawData = encoder.encode(plaintext);
 
@@ -263,7 +353,7 @@ async function encryptPayload(plaintext, dateEncryptionKey) {
       name: 'AES-GCM',
       iv: iv,
     },
-    dateEncryptionKey,
+    dataEncryptionKey,
     rawData,
   );
 
@@ -277,12 +367,51 @@ async function encryptPayload(plaintext, dateEncryptionKey) {
 
 The resulting base64 strings representing the ciphertext payload and the IV are bundled together and safely transmitted to the backend server.
 
+<details>
+<summary>Salt vs. IV</summary>
+It is important not to confuse the User Salt with the Initialization Vector (IV):
+
+- **The User Salt** is generated once during registration, stored with the user's profile metadata on the server, and used strictly to derive the main encryption key.
+- **The IV** is generated dynamically every single time you encrypt an individual record. It is sent to the server and stored directly alongside that specific ciphertext payload, because the browser requires both the ciphertext and its unique IV to successfully decrypt the record later.
+
+**The Golden Rule of AES-GCM:** While the IV doesn't need to be secret, it **must** be globally unique for every single encryption operation using that key. Reusing the same IV with the same Data Encryption Key (DEK) in AES-GCM breaks the mathematical security boundaries entirely, allowing an attacker to reconstruct the plaintext data without ever knowing the key.
+
+  </details>
+
 ## The Decryption Pipeline (Reading Data)
+
+The decryption engine mirrors the write pipeline in reverse, executing entirely within the localized sandbox of the client window. It decodes the Base64 payloads streaming from your database and feeds them alongside your cached session key directly into the Web Crypto decryption engine to reconstruct the raw data.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    %% Inputs from Server & Storage
+    Server[("Backend Server<br>(Encrypted Records Table)")] ==>|Encrypted row| Decode[Decode ciphertext & IV<br>Base64]
+    DB[("Session Store<br>(IndexedDB)")] -->|dataEncryptionKey| Decrypt[Decrypt payload via AES-GCM]
+
+    %% Decryption Processing Layer
+    Decode -->|ciphertextBuffer & iv| Decrypt
+    Decrypt -->|decrypted stringBuffer| DecodeStr[Decode to string]
+
+    %% Outflow to Plaintext
+    DecodeStr --> Plain[Plaintext Output]
+
+    %% Styling to match your encryption chart theme
+    style Server fill:#eceff1,stroke:#37474f,stroke-width:2px,stroke-dasharray: 5 5
+    style Decode fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    style DB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Decrypt fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style DecodeStr fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Plain fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+```
+
+</div>
 
 When pulling data down from the database, the reverse process must take place entirely within the local context of the browser window.
 
 ```ts
-async function decryptPayload(base64Ciphertext, base64Iv, dateEncryptionKey) {
+async function decryptPayload(base64Ciphertext, base64Iv, dataEncryptionKey) {
   // Convert base64 payloads back into binary arrays
   const ciphertext = Uint8Array.from(atob(base64Ciphertext), (c) => c.charCodeAt(0));
   const iv = Uint8Array.from(atob(base64Iv), (c) => c.charCodeAt(0));
@@ -293,7 +422,7 @@ async function decryptPayload(base64Ciphertext, base64Iv, dateEncryptionKey) {
       name: 'AES-GCM',
       iv: iv,
     },
-    dateEncryptionKey,
+    dataEncryptionKey,
     ciphertext,
   );
 
@@ -307,13 +436,52 @@ The decrypted plaintext string is temporarily mapped directly to the application
 
 # The Clean Slate Lifecycle: Handling New Devices and Cache Clears
 
+This structural layout maps out the strict waterfall dependencies required during a cold boot or device sync. Because the client lacks a persisted key, the initial network payload fetch acts as a hard functional prerequisite—supplying the public salt required to drive user credential prompts, local re-derivation, and eventual data decryption.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    %% Steps (Processes/Actions inside blocks)
+    Fetch[Fetch Remote Context]
+    Prompt[Prompt User for Password]
+    KDF[Execute PBKDF2 Re-Derivation]
+    Hydrate[Initialize Active Session State]
+    IDB[("Session Store:<br>IndexedDB")]
+    Decrypt[Decrypt Payload via AES-GCM]
+    Render[Decode and Render App Views]
+
+    %% Flow (Outputs/Data inside arrow labels)
+    Fetch -->|Salt and ciphertext envelope| Prompt
+    Prompt -->|MasterPassword and salt| KDF
+    KDF -->|DataEncryptionKey| Hydrate
+
+    %% Parallel Storage Track
+    Hydrate -->|DataEncryptionKey<br>as structured clone| IDB
+
+    %% Main Vertical Flow Continues
+    Hydrate -->|DataEncryptionKey and ciphertextBuffer| Decrypt
+    Decrypt -->|Decrypted stringBuffer| Render
+
+    %% Consistent Color Profiles matching your design
+    style Fetch fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    style Prompt fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style KDF fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Hydrate fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style IDB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Decrypt fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Render fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+```
+
+</div>
+
 The most complex phase of a Zero-Knowledge data architecture occurs when a user accesses the application from a completely new device, or clears their browser cache (wiping IndexedDB).
 
 Because the local database is empty, the client lacks the CryptoKey required to read incoming server records. The system must reconstruct the key securely using the public salt stored on the server.
 
 | Step                     | Client Action                                                                                                                           | Server Action                                        |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **1. Request Contex**    | Requests the encrypted data envelope and the user's specific salt                                                                       | Returns the public salt and the ciphertext payloads. |
+| **1. Request Context**   | Requests the encrypted data envelope and the user's specific salt                                                                       | Returns the public salt and the ciphertext payloads. |
 | **2. Key Re-Derivation** | Prompts the user for the Master Password. Re-runs the KDF algorithm locally using the password and the fetched salt to rebuild the DEK. | _Unaware of this step._                              |
 | **3. Local Hydration**   | Saves the newly derived CryptoKey back into the local IndexedDB as `extractable: false`.                                                | _Unaware of this step._                              |
 | **4. Decryption**        | Passes the retrieved ciphertext payloads through `crypto.subtle.decrypt()` using the reconstructed key.                                 | Serves the encrypted records.                        |
@@ -333,6 +501,29 @@ Therefore, an E2EE logout must be treated as a client-side memory sanitation eve
 By forcing a full page reload, the browser completely destroys the existing execution context, flushes the entire V8 javascript heap memory, and guarantees that no cryptographic remnants are left behind.
 
 ## Implementing a logout pipeline
+
+To enforce a flawless zero-knowledge exit, our logout routine behaves like a coordinated client-side demolition team. As shown below, it systematically purges persistent storage records, neutralizes volatile window references, and executes a hard browser context refresh to completely clear the underlying physical RAM heap.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    %% Steps (Processes/Actions inside blocks)
+    Evict[Evict Storage Records]
+    Sanitize[Neutralize Volatile Memory Context]
+    Reload[Force Hard Page Reload]
+
+    %% Flow (Outputs/Data inside arrow labels)
+    Evict -->|IndexedDB key records deleted| Sanitize
+    Sanitize -->|In-memory caches and tokens nullified| Reload
+
+    %% Consistent Color Profiles matching your design
+    style Evict fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Sanitize fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Reload fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+```
+
+</div>
 
 To put these three phases into practice, we can implement an explicit, top-level logout function. By structuring this routine sequentially, we ensure that even if an unexpected error occurs while interacting with IndexedDB, the code will always proceed to the ultimate fail-safe: explicitly clearing volatile app context and forcing a complete browser heap flush.
 
@@ -365,7 +556,7 @@ async function executeSecureLogout() {
   // PHASE 2: Volatile Memory Sanitization
   // Explicitly overwrite any global application state holding plaintext or keys.
   if (window.AppContext) {
-    window.AppContext.dateEncryptionKey = null;
+    window.AppContext.dataEncryptionKey = null;
     window.AppContext.decryptedCache = null;
     window.AppContext.userProfile = null;
   }

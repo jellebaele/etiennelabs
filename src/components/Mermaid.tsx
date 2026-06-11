@@ -11,22 +11,29 @@ mermaid.initialize({
 
 const Mermaid = ({ chart }: { chart: string }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const idRef = useRef(`mermaid-${Math.random().toString(36).slice(2, 11)}`);
 
   useEffect(() => {
     if (!ref.current) return;
 
+    let isCurrent = true;
+
     const renderChart = async () => {
       try {
-        const mermaidId = `mermaid-${new Date().getTime()}`;
-        const { svg } = await mermaid.render(mermaidId, chart);
+        if (ref.current) ref.current.innerHTML = '';
+        const { svg } = await mermaid.render(idRef.current, chart);
 
-        ref.current!.innerHTML = svg;
+        if (isCurrent && ref.current) ref.current!.innerHTML = svg;
       } catch (err) {
         console.error('Mermaid rendering failed:', err);
       }
     };
 
     renderChart();
+
+    return () => {
+      isCurrent = false;
+    };
   }, [chart]);
 
   return (
