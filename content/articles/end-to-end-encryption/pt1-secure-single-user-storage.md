@@ -321,7 +321,7 @@ To turn this into a truly bulletproof implementation, you should tie the TTL to 
 
 - **Global Activity Listeners:** Run a lightweight, debounced event listener on the window object for user interactions (mousemove, keydown, click). If no events fire within 15 minutes, trigger a destructive clearSession() function that explicitly wipes the store and redirects to the lock screen.
 
-# Read and Write Flows (Encryption & Decryption)
+# Write and Read Flows (Encryption & Decryption)
 
 Once the data encryption key is established and safely held in memory or IndexedDB, the data pipeline follows a strict encrypt-before-send and decrypt-after-read pattern.
 
