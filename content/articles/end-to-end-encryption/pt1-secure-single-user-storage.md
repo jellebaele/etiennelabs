@@ -321,6 +321,35 @@ To turn this into a truly bulletproof implementation, you should tie the TTL to 
 
 - **Global Activity Listeners:** Run a lightweight, debounced event listener on the window object for user interactions (mousemove, keydown, click). If no events fire within 15 minutes, trigger a destructive clearSession() function that explicitly wipes the store and redirects to the lock screen.
 
+## The Zero-Knowledge Storage Blueprint
+
+Before we dive into the exact code for reading and writing data, let's look at how this architecture maps to a physical database. Because our server is completely blind, our database tables are intentionally split into two distinct structures: The Profile Table (system metadata) and The Vault Data Table (encrypted payloads).
+
+Here is exactly what your database sees versus what remains strictly local to the user's browser memory.
+
+### 1. The User Profile Table
+
+This table lives on the server and handles authentication and key-derivation metadata. It contains the KDF configuration and the plaintext salt. The server needs to see these to hand them back to the client upon login, but they contain zero sensitive user data.
+
+| Column Name | What the Server Sees                  | Who Can Read / Use It?                            |
+| ----------- | ------------------------------------- | ------------------------------------------------- |
+| user_id     | user_alice_11                         | Server & Client (Identity Lookup)                 |
+| email       | alice@clinic.com                      | Server (Authentication & login)                   |
+| kdf_salt    | argon2id_v=19_m=65536,t=3,p=4$sAlT... | Client Only (Downloaded to derive the Master Key) |
+
+**Local Memory Note (RAM Only):** Notice what is missing from the server profile table. The user's raw master password and the derived Symmetric Master DEK are never sent to the server. They exist exclusively inside the browser's volatile RAM and as a non-extractable clone inside the client's local IndexedDB.
+
+### 2. The Vault Data Table
+
+This table stores the actual data payloads. Because we are using authenticated symmetric encryption (AES-GCM), every single record row must store its own unique Symmetric IV alongside the ciphertext. Without that specific IV, the client cannot decrypt the block, but to the server, the entire row looks like unreadable text strings.
+
+| Record ID | Owner User ID                | Symmetric IV (Plaintext) | Encrypted Content (Ciphertext + Auth Tag) |
+| --------- | ---------------------------- | ------------------------ | ----------------------------------------- |
+| note_101  | user_alice_11d3f2a91b29a1... | aesgcm:3f82a...          | 92f1 (Opaque Blob)                        |
+| note_102  | user_alice_118c11e0b244c1... | aesgcm:9c21b...          | 01ab (Opaque Blob)                        |
+
+**The Security Boundary:** If an adversary completely compromises the database backend, all they get is a list of public user IDs, salts, initialization vectors, and encrypted nonsense. Without the master password to execute the client-side KDF loops, the data remains an unbreakable wall.
+
 # Write and Read Flows (Encryption & Decryption)
 
 Once the data encryption key is established and safely held in memory or IndexedDB, the data pipeline follows a strict encrypt-before-send and decrypt-after-read pattern.
