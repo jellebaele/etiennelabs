@@ -393,14 +393,14 @@ async function generateAndRegisterAsymmetricKeys() {
       publicExponent: new Uint8Array([1, 0, 1]), // Equivalent to 65537
       hash: 'SHA-256',
     },
-    false, // Crucial: Keep the private key non-extractable
+    false, // Crucial: Keep the private key non-extractable from memory
     ['wrapKey', 'unwrapKey'], // Authorized strictly for securing symmetric DEKs
   );
 
   // Step 2: Export the Public Key to a shareable JSON Web Key (JWK) format
   const publicKeyJwk = await window.crypto.subtle.exportKey('jwk', keyPair.publicKey);
 
-  // Step 3: Save the non-extractable private key to local storage
+  // Step 3: Save the non-extractable private key to local storage (e.g., IndexedDB)
   await savePrivateKeyToLocalStore(keyPair.privateKey);
 
   // Return the public JWK string to be transmitted to the backend server
@@ -419,13 +419,14 @@ When Alice creates a document, she generates a random 256-bit symmetric Data Enc
 ```ts
 async function encryptAndWrapForSelf(documentData: string, alicePublicKey: CryptoKey) {
   // 1. Generate a transient, random symmetric key (DEK)
+  // Note: This must be temporary and extractable so the wrapKey API can read its raw bytes.
   const dek = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
     'encrypt',
     'decrypt',
   ]);
 
   // 2. Symmetrically encrypt the document content
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12)); // Secure 12-byte nonce for AES-GCM
   const encryptedContent = await window.crypto.subtle.encrypt(
     { name: 'AES-GCM', iv: iv },
     dek,
@@ -441,4 +442,272 @@ async function encryptAndWrapForSelf(documentData: string, alicePublicKey: Crypt
 }
 ```
 
-TODO: In the core georgraping strategy, detail sectoins only handle pattern A.
+## Scenario 2: Provisioning Access for a Coworker (Bob)
+
+When Alice wants to share the document with Bob, she does not re-encrypt the large document payload. Instead, she pulls Bob's pre-verified RSA public key from the identity server and wraps the exact same DEK she generated in Scenario 1.
+
+```ts
+async function wrapKeyForRecipient(dek: CryptoKey, bobPublicKeyJwk: string): Promise<ArrayBuffer> {
+  // 1. Import Bob's public JSON Web Key (JWK) into a usable CryptoKey object
+  const bobPublicKey = await window.crypto.subtle.importKey(
+    'jwk',
+    JSON.parse(bobPublicKeyJwk),
+    {
+      name: 'RSA-OAEP',
+      hash: 'SHA-256',
+    },
+    true, // Public keys are inherently shareable and extractable
+    ['wrapKey'], // Authorized strictly for wrapping
+  );
+
+  // 2. Wrap the existing DEK using Bob's Public Key
+  const wrappedDekForBob = await window.crypto.subtle.wrapKey('raw', dek, bobPublicKey, {
+    name: 'RSA-OAEP',
+  });
+
+  // 3. Return the wrapped key buffer to be sent to the server alongside the document payload
+  return wrappedDekForBob;
+}
+```
+
+## Scenario 3: Retrieval and Decryption (Bob's Flow)
+
+When Bob logs in later, his client downloads the encrypted payload and the specific `wrappedDekForBob` envelope meant for him. His browser pulls his non-extractable private key out of IndexedDB to safely unwrap the DEK and read the document.
+
+```ts
+async function downloadAndDecryptDocument(
+  encryptedContent: ArrayBuffer,
+  iv: Uint8Array,
+  wrappedDekForBob: ArrayBuffer,
+): Promise<string> {
+  // 1. Fetch Bob's private key securely from local client storage (IndexedDB)
+  const bobPrivateKey = await getPrivateKeyFromLocalStore();
+
+  // 2. Asymmetrically decrypt ("unwrap") the DEK using Bob's private key
+  const dek = await window.crypto.subtle.unwrapKey(
+    'raw',
+    wrappedDekForBob,
+    bobPrivateKey,
+    { name: 'RSA-OAEP' },
+    { name: 'AES-GCM', length: 256 },
+    true, // Allow the DEK to be extractable so it can be cached in IndexedDB for subsequent reads
+    ['decrypt'], // Bob only needs decryption capabilities for this document
+  );
+
+  // 3. Symmetrically decrypt the document payload using the unwrapped DEK
+  const decryptedBuffer = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    dek,
+    encryptedContent,
+  );
+
+  // 4. Decode the raw binary buffer back into its original text format
+  return new TextDecoder().decode(decryptedBuffer);
+}
+```
+
+# Implementing Key Agreement (The ECDH Approach)
+
+To implement Key Agreement, we shift from RSA to ECDH (Elliptic Curve Diffie-Hellman). Instead of directly encrypting a key package for a specific user, both parties use their keys to compute a shared mathematical point on an elliptic curve. For modern web applications, ECDH paired with the P-256 or P-384 curve is the industry standard for fast, high-security secret derivation.
+
+## Key Initialization & Device Identity
+
+Just like in the RSA approach, Bob must first generate a long-term identity key pair. He registers his public key (the Orange mixture) on the server while keeping his static private key (his secret color, Red) securely inside his client environment.
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    GenECDH[Generate Long-Term ECDH Identity Pair]
+    ExportStaticPub[Export Static Public Key to JWK]
+    Server[("Backend Server:<br>User Identity Keys")]
+    IDB[("Secure Store:<br>IndexedDB")]
+
+    GenECDH -->|staticPublicKey CryptoKey| ExportStaticPub
+    ExportStaticPub -->|bobStaticPubJwk json string| Server
+    GenECDH -->|staticPrivateKey CryptoKey| IDB
+
+    style GenECDH fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    style ExportStaticPub fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Server fill:#eceff1,stroke:#37474f,stroke-width:2px,stroke-dasharray: 5 5
+    style IDB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+```
+
+</div>
+
+```ts
+async function generateAndRegisterECDHKeys() {
+  // Step 1: Generate a long-term ECDH identity key pair using the P-256 curve
+  const identityKeyPair = await window.crypto.subtle.generateKey(
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    false, // Protect the identity private key from being extracted
+    ['deriveKey', 'deriveBits'], // Authorized strictly for computing shared secrets
+  );
+
+  // Step 2: Export the static public key to distribute to the server
+  const staticPublicKeyJwk = await window.crypto.subtle.exportKey('jwk', identityKeyPair.publicKey);
+
+  // Step 3: Secure the static private key locally
+  await savePrivateKeyToLocalStore(identityKeyPair.privateKey);
+
+  return JSON.stringify(staticPublicKeyJwk);
+}
+```
+
+## The Dynamic Handshake: Alice's Flow (Write Pipeline)
+
+When Alice wants to encrypt a document for Bob, she does not use a long-term key pair for the handshake. Instead, she creates a temporary, single-use ephemeral key pair (her secret color Blue and her public Green mixture).
+
+She mixes her temporary private key with Bob’s static public key to derive the KEK (Brown paint), wraps her document DEK with it, and throws the ephemeral public key into the delivery package.
+
+```ts
+async function encryptAndWrapForRecipientECDH(documentData: string, bobStaticPubJwk: string) {
+  // 1. Generate the transient Data Encryption Key (DEK) to encrypt the actual file
+  const dek = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
+
+  // 2. Encrypt the file payload symmetrically
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encryptedContent = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    dek,
+    new TextEncoder().encode(documentData),
+  );
+
+  // 3. Import Bob's static public key (The Orange Mix)
+  const bobStaticPublicKey = await window.crypto.subtle.importKey(
+    'jwk',
+    JSON.parse(bobStaticPubJwk),
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    [], // Public keys need no specific usage flags for key derivation arguments
+  );
+
+  // 4. Generate Alice's one-time Ephemeral Key Pair (Secret Blue + Public Green Mix)
+  const aliceEphemeralKeyPair = await window.crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true, // The ephemeral public key must be extractable so we can send it to Bob
+    ['deriveKey'],
+  );
+
+  // 5. Derive the Shared Secret KEK (Final Brown Paint) by combining Alice's Ephemeral Private and Bob's Static Public
+  const kek = await window.crypto.subtle.deriveKey(
+    {
+      name: 'ECDH',
+      public: bobStaticPublicKey, // Bob's public key
+    },
+    aliceEphemeralKeyPair.privateKey, // Alice's temporary private key
+    { name: 'AES-KW', length: 256 }, // We derive an AES Key Wrap (AES-KW) key to envelope our DEK
+    false, // The KEK is highly sensitive and should never be memory-extractable
+    ['wrapKey'],
+  );
+
+  // 6. Wrap the 32-byte DEK using the derived KEK
+  const wrappedDek = await window.crypto.subtle.wrapKey('raw', dek, kek, { name: 'AES-KW' });
+
+  // 7. Export Alice's Ephemeral Public Key to send over the wire
+  const aliceEphemeralPubJwk = await window.crypto.subtle.exportKey(
+    'jwk',
+    aliceEphemeralKeyPair.publicKey,
+  );
+
+  return {
+    encryptedContent,
+    iv,
+    wrappedDek,
+    aliceEphemeralPubJwk: JSON.stringify(aliceEphemeralPubJwk),
+  };
+}
+```
+
+## The Convergence: Bob's Flow (Read Pipeline)
+
+When Bob retrieves the package, his device reads Alice’s temporary public key (Green mixture) out of the metadata. He passes it, along with his long-term private key (Red), into the derivation engine. Thanks to elliptic curve geometry, this mirrors Alice's calculation perfectly, yielding the exact same Brown KEK required to unwrap the DEK.
+
+```ts
+async function downloadAndDecryptECDH(
+  encryptedContent: ArrayBuffer,
+  iv: Uint8Array,
+  wrappedDek: ArrayBuffer,
+  aliceEphemeralPubJwk: string,
+): Promise<string> {
+  // 1. Recover Bob's long-term static private key (Secret Red Color) from local storage
+  const bobStaticPrivateKey = await getPrivateKeyFromLocalStore();
+
+  // 2. Import Alice's temporary public key (The Green Mix) from the package metadata
+  const aliceEphemeralPublicKey = await window.crypto.subtle.importKey(
+    'jwk',
+    JSON.parse(aliceEphemeralPubJwk),
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    [],
+  );
+
+  // 3. Derive the exact same Shared Secret KEK (Final Brown Paint)
+  const kek = await window.crypto.subtle.deriveKey(
+    {
+      name: 'ECDH',
+      public: aliceEphemeralPublicKey, // Alice's temporary public key
+    },
+    bobStaticPrivateKey, // Bob's static private key
+    { name: 'AES-KW', length: 256 },
+    false,
+    ['unwrapKey'],
+  );
+
+  // 4. Unwrap the DEK using the freshly derived KEK
+  const dek = await window.crypto.subtle.unwrapKey(
+    'raw',
+    wrappedDek,
+    kek,
+    { name: 'AES-KW' },
+    { name: 'AES-GCM', length: 256 },
+    true, // Extractable so Bob can save it directly to IndexedDB cache for later
+    ['decrypt'],
+  );
+
+  // 5. Symmetrically decrypt the underlying document content
+  const decryptedBuffer = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    dek,
+    encryptedContent,
+  );
+
+  return new TextDecoder().decode(decryptedBuffer);
+}
+```
+
+# Hardening the Architecture: Real-World Improvements
+
+While the core mechanics of Key Transport and Key Agreement provide rock-solid confidentiality, deploying these patterns to production requires moving past the theoretical basics. To build a resilient, real-world system, consider layering in the following architectural improvements:
+
+1. **Cryptographic Agility (Upgrading to Post-Quantum)**
+   The implementation code we wrote relies on classic asymmetric primitives: RSA-OAEP and ECDH (P-256). While incredibly secure against modern hardware, these math problems are highly vulnerable to future quantum computing scale attacks.
+
+   The Fix: Design your database schemas and payload wrappers with cryptographic agility. Instead of assuming an encryption format is permanently tied to an RSA key, include an explicit version string in your metadata envelope (e.g., algo: "RSA-OAEP-SHA256" or algo: "ML-KEM-768"). This allows you to hot-swap classic keys for post-quantum algorithms without needing to rewrite your core document storage tables.
+
+2. **Handling Key Rotation and Revocation**
+   What happens when Bob loses his laptop, or an employee leaves your organization? If a long-term identity private key is compromised, your system must react immediately.
+
+   The Fix: Implement an Identity Key Registry that tracks key versioning. Every time Alice encrypts a document, she should cache the unique hash (fingerprint) of the public key version she used. If Bob rotates his keys, older historical documents remain bound to the historical key, while new documents seamlessly switch to his new public key mixture.
+
+3. **Offloading Metadata for Performance**
+   In large enterprise applications, a single document might be shared with hundreds of users or multiple nested teams. If you use Pattern A and bundle hundreds of individual wrapped key blocks directly into the document's header payload, your file download sizes will balloon significantly.
+
+   The Fix: Decouple the payload from the authorization envelopes. Store the symmetrically encrypted document block in an object store (like AWS S3) under a static content ID. Store the small wrapped DEK entries in an isolated, indexed relational database table. This allows users to quickly fetch only their specific 32-byte key block to run their local decryption math, bypassing heavy network transfers entirely.
+
+# Conclusion
+
+End-to-end data protection is no longer an exotic feature reserved for specialized security tools—it is a baseline requirement for modern cloud collaboration.
+
+Choosing between Key Transport (The RSA Approach) and Key Agreement (The ECDH Approach) ultimately comes down to your data topology and access models:
+
+- Choose Key Transport if your system is built around heavily asynchronous, one-way push states where data access permissions are modified completely independently by the document creator.
+- Choose Key Agreement if you need low-overhead synchronization, tight integration into active web-socket pipelines, and require Forward Secrecy to safeguard past user data against future device compromises.
+
+By using standard Web Crypto APIs to pin non-extractable private keys into local device memory and using hybrid architecture patterns to isolate document payload data from key lifecycle states, you guarantee that data remains completely safe, even if your cloud backend infrastructure is compromised. The keys stay exactly where they belong: securely in the hands of the users.
