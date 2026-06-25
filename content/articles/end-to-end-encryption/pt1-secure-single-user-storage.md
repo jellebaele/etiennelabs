@@ -331,11 +331,11 @@ Here is exactly what your database sees versus what remains strictly local to th
 
 This table lives on the server and handles authentication and key-derivation metadata. It contains the KDF configuration and the plaintext salt. The server needs to see these to hand them back to the client upon login, but they contain zero sensitive user data.
 
-| Column Name | What the Server Sees                  | Who Can Read / Use It?                            |
-| ----------- | ------------------------------------- | ------------------------------------------------- |
-| user_id     | user_alice_11                         | Server & Client (Identity Lookup)                 |
-| email       | alice@clinic.com                      | Server (Authentication & login)                   |
-| kdf_salt    | argon2id_v=19_m=65536,t=3,p=4$sAlT... | Client Only (Downloaded to derive the Master Key) |
+| Column Name | What the Server Sees                     | Who Can Read / Use It?                            |
+| ----------- | ---------------------------------------- | ------------------------------------------------- |
+| user_id     | user_alice_11                            | Server & Client (Identity Lookup)                 |
+| email       | alice@clinic.com                         | Server (Authentication & login)                   |
+| kdf_salt    | `$argon2id$v=19$m=65536,t=3,p=4$sAlT...` | Client Only (Downloaded to derive the Master Key) |
 
 **Local Memory Note (RAM Only):** Notice what is missing from the server profile table. The user's raw master password and the derived Symmetric Master DEK are never sent to the server. They exist exclusively inside the browser's volatile RAM and as a non-extractable clone inside the client's local IndexedDB.
 
