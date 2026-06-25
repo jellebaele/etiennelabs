@@ -144,9 +144,51 @@ When executing hybrid encryption, developers generally choose between two distin
 
 # Pattern A: Key Transport (The RSA Approach)
 
-The Key Transport pattern is a unidirectional "push" mechanism. It directly mirrors our mailbox analogy and is typically implemented using algorithms like _RSA-OAEP_.
+The Key Transport pattern is a unidirectional "push" mechanism. It directly mirrors our traditional mailbox analogy and is typically implemented using asymmetric algorithms like _RSA-OAEP_.
 
-In this model, if Alice wants to share a secure document with Bob, the workflow functions like a digital courier:
+In this model, if Alice wants to share a secure document with Bob, the workflow functions like a digital courier. Because the recipient’s public key acts as a one-way lock, Bob does not need to be online or participate in a real-time handshake for Alice to securely transport a secret to him.
+
+## The Technical Workflow
+
+The workflow operates seamlessly in a few steps:
+
+- **The Pre-requisite (Asynchronous Retrieval):** Bob has a trusted, static key pair. He publishes his public key to a secure server and keeps his private key strictly confidential on his device. Alice fetches Bob’s pre-published public key from the identity server. Bob does not need to be online for this to happen.
+- **Data Encryption & Local Key Wrapping:** Before uploading anything, Alice's device handles the entire encryption pipeline locally:
+  1. She generates a random, 32-byte Data Encryption Key (DEK) and uses it to encrypt the actual document payload via fast symmetric encryption.
+  2. She takes Bob’s static public key and uses it to encrypt ("wrap") that 32-byte DEK. Because RSA public keys can only encrypt data and cannot decrypt it, this payload is now a secure one-way package.
+- **Storage:** Alice bundles the symmetrically encrypted document payload along with Bob's wrapped DEK into a single package and uploads it to the storage server. The package sits securely in the cloud, completely unreadable to the server or any eavesdropper, waiting for Bob to log in.
+- **The Retrieval & Decryption:** When Bob logs in later, his device completes the delivery:
+  1. He downloads the encrypted package from the storage server.
+  2. Bob applies his strictly confidential private key to unwrap the encrypted DEK.
+  3. Bob uses that freshly revealed 32-byte DEK to decrypt and read the actual document payload.
+
+```mermaid
+sequenceDiagram
+    participant Alice as Alice (Sender)
+    participant Server as Cloud / Identity Server
+    participant Bob as Bob (Receiver)
+
+    note over Alice, Server: [The Pre-requisite] Asynchronous Retrieval
+    Alice ->> Server: Fetches Bob's verified Public Key (B_pub)
+    Server -->> Alice: Returns Bob's Public Key (B_pub)
+    note left of Alice: Bob does not need to be online
+
+    note over Alice: [Data Encryption & Local Key Wrapping]
+    Alice ->> Alice: 1. Generates random 32-byte DEK
+    Alice ->> Alice: 2. Encrypts Document payload with that DEK
+    Alice ->> Alice: 3. Encrypts ("Wraps") the DEK using Bob's B_pub
+
+    note over Alice, Server: [Storage]
+    Alice ->> Server: Uploads Package (Encrypted Document + Wrapped DEK)
+    note over Server: Package sits securely on the server<br/>waiting for Bob to log in
+
+    note over Server, Bob: [The Retrieval & Decryption]
+    Bob ->> Server: Logs in later and downloads Package
+    Server -->> Bob: Returns Encrypted Document + Wrapped DEK
+
+    Bob ->> Bob: 4. Unwraps the DEK using his Private Key (B_priv)
+    Bob ->> Bob: 5. Decrypts the Document payload using the DEK
+```
 
 - **Asynchronous Retrieval:** Alice fetches Bob’s pre-published Public Key from the server. Bob does not need to be online for this to happen.
 - **Key Wrapping:** Alice encrypts the document's unique 32-byte DEK using Bob’s Public Key. This process is called "wrapping."
@@ -182,9 +224,17 @@ sequenceDiagram
     Bob ->> Bob: 5. Decrypts the Document payload using the DEK
 ```
 
+## Managing the Lifecycle of the DEK
+
+Because the data is stored statically in the cloud, managing how Bob accesses the document over time is incredibly straightforward:
+
+- **The One-Time Cost:** Alice only has to perform the RSA wrapping math once per recipient. Once the encrypted document and wrapped DEK are stored on the server, Alice's job is completely done.
+- **Decrypting Today (First Time):** Bob downloads the package, uses his RSA private key to unwrap the DEK, and uses that DEK to read the file. To avoid doing heavy RSA mathematics every single time he wants to open the document, his client browser saves the decrypted 32-byte DEK directly into his local, non-extractable IndexedDB cache.
+- **Decrypting Tomorrow (Historical View):** When Bob returns to read the historical document tomorrow, he bypasses the asymmetric unwrapping entirely. He does not need to touch his RSA private key. His browser simply fetches the document's specific DEK straight from his local IndexedDB cache and decrypts the file instantly.
+
 ## Why use it
 
-Key Transport is exceptionally well-suited for asynchronous database collaboration or email (like PGP). Alice can instantly provision access for ten different coworkers entirely on her own, simply by wrapping the tiny DEK ten individual times using each coworker's unique public key.
+Key Transport is exceptionally well-suited for asynchronous database collaboration, cloud storage architectures, or email protocols (like PGP). Its greatest strength is independent provisioning. If Alice wants to instantly grant document access to ten different coworkers, she doesn't need to re-encrypt the massive document payload ten times. She keeps the encrypted document exactly as it is, and simply wraps the tiny 32-byte DEK ten individual times using each coworker's unique public key.
 
 # Pattern B: Key Agreement (The ECDH Approach)
 
