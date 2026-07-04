@@ -70,6 +70,7 @@ const ArticleList = ({ articles }: ArticleListProps) => {
             <ArticleCard
               key={index}
               article={article}
+              activeTag={activeTag}
             />
           ))}
         </motion.div>
@@ -91,6 +92,7 @@ const ArticleList = ({ articles }: ArticleListProps) => {
                   <ArticleCard
                     key={index}
                     article={article}
+                    activeTag={tag}
                   />
                 ))}
               </div>
