@@ -101,7 +101,7 @@ The password salt and Argon2id configuration string live on the server profile r
 | email       | alice@clinic.com                         | Server (Authentication & login)                   |
 | kdf_salt    | `$argon2id$v=19$m=65536,t=3,p=4$sAlT...` | Client Only (Downloaded to derive the Master Key) |
 
-The derived Master Key is never sent to the server. During an active session, the client app either fetches this key from its non-extractable store in IndexedDB or prompts the user for their password to recreate it.
+The **derived Master Key** is never sent to the server. During an active session, the client app either fetches this key from its non-extractable store in IndexedDB or prompts the user for their password to recreate it.
 
 ### Data layout
 
