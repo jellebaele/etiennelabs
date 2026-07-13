@@ -95,11 +95,11 @@ As discussed in [Part 1](./pt1-secure-single-user-storage), a single-user system
 
 The password salt and Argon2id configuration string live on the server profile row. When logging in, the client downloads this bundle, applies the parameters to the user's password, and spins up the Master Key straight into volatile memory (RAM).
 
-| Column Name | What the Server Sees                     | Who Can Read / Use It?                            |
-| ----------- | ---------------------------------------- | ------------------------------------------------- |
-| user_id     | user_alice_11                            | Server & Client (Identity Lookup)                 |
-| email       | alice@clinic.com                         | Server (Authentication & login)                   |
-| kdf_salt    | `$argon2id$v=19$m=65536,t=3,p=4$sAlT...` | Client Only (Downloaded to derive the Master Key) |
+| Column Name                      | What the Server Sees                     | Who Can Read / Use It?                            |
+| -------------------------------- | ---------------------------------------- | ------------------------------------------------- |
+| user_id                          | user_alice_11                            | Server & Client (Identity Lookup)                 |
+| email                            | alice@clinic.com                         | Server (Authentication & login)                   |
+| kdf_salt (kdf parameters & salt) | `$argon2id$v=19$m=65536,t=3,p=4$sAlT...` | Client Only (Downloaded to derive the Master Key) |
 
 The **derived Master Key** is never sent to the server. During an active session, the client app either fetches this key from its non-extractable store in IndexedDB or prompts the user for their password to recreate it.
 
@@ -116,7 +116,7 @@ Every individual record requires its own random, unique Symmetric IV (Initializa
 
 ## 2. Multi-User Collaborative Architecture
 
-In a collaborative system, we break that hard link between your password and the data. We strip the data encryption keys (DEKs) out of the user profile entirely. Instead, the profile holds an Asymmetric Mailbox (your Public/Private key pair). The data payloads are encrypted with their own independent, standalone keys (Group AES Keys), which live right inside the document rows—wrapped separately for each user who has permission to view them.
+In a collaborative system, we break that hard link between your password and the data. We strip the data encryption keys (DEKs) out of the user profile entirely. Instead, the profile holds an Asymmetric Mailbox (your Public/Private key pair). The data payloads are encrypted with their own independent, standalone keys (Group AES Keys), which live right inside the document rows, wrapped separately for each user who has permission to view them.
 
 ### User Profile Schema
 
@@ -190,47 +190,12 @@ sequenceDiagram
     Bob ->> Bob: 5. Decrypts the Document payload using the DEK
 ```
 
-- **Asynchronous Retrieval:** Alice fetches Bob’s pre-published Public Key from the server. Bob does not need to be online for this to happen.
-- **Key Wrapping:** Alice encrypts the document's unique 32-byte DEK using Bob’s Public Key. This process is called "wrapping."
-- **Storage:** Alice sends the symmetrically encrypted document payload along with Bob's wrapped key to the server.
-- **Decryption:** When Bob logs in later, he downloads the wrapped key and uses his strictly private Private Key to unwrap it, revealing the 32-byte DEK required to decrypt the file.
-
-```mermaid
-sequenceDiagram
-    participant Alice as Alice (Sender)
-    participant Server as Cloud Storage / Server
-    participant Bob as Bob (Receiver)
-
-    note over Alice, Server: [Asynchronous Retrieval]
-    Alice ->> Server: Fetches Bob's verified Public Key (B_pub)
-    note over Server: Bob does not need to be online
-    Server -->> Alice: Returns Bob's Public Key (B_pub)
-
-
-    note over Alice: [Data Encryption & Key Wrapping]
-    Alice ->> Alice: 1. Generates random 32-byte DEK
-    Alice ->> Alice: 2. Encrypts Document payload with that DEK
-    Alice ->> Alice: 3. Encrypts ("Wraps") the DEK using Bob's B_pub
-
-    note over Alice, Server: [Storage]
-    Alice ->> Server: Uploads Package (Encrypted Document + Wrapped DEK)
-    note over Server: Package sits securely on the server<br/>waiting for Bob to log in
-
-    note over Server, Bob: [Decryption (Later on)]
-    Bob ->> Server: Logs in and downloads Package
-    Server -->> Bob: Returns Encrypted Document + Wrapped DEK
-
-    Bob ->> Bob: 4. Unwraps the DEK using his Private Key (B_priv)
-    Bob ->> Bob: 5. Decrypts the Document payload using the DEK
-```
-
 ## Managing the Lifecycle of the DEK
 
 Because the data is stored statically in the cloud, managing how Bob accesses the document over time is incredibly straightforward:
 
 - **The One-Time Cost:** Alice only has to perform the RSA wrapping math once per recipient. Once the encrypted document and wrapped DEK are stored on the server, Alice's job is completely done.
-- **Decrypting Today (First Time):** Bob downloads the package, uses his RSA private key to unwrap the DEK, and uses that DEK to read the file. To avoid doing heavy RSA mathematics every single time he wants to open the document, his client browser saves the decrypted 32-byte DEK directly into his local, non-extractable IndexedDB cache.
-- **Decrypting Tomorrow (Historical View):** When Bob returns to read the historical document tomorrow, he bypasses the asymmetric unwrapping entirely. He does not need to touch his RSA private key. His browser simply fetches the document's specific DEK straight from his local IndexedDB cache and decrypts the file instantly.
+- **Every Read, Same Path:** Whether Bob opens the document the moment it arrives or returns to it a year later, the flow never changes. He downloads the package, uses his static RSA private key to unwrap the DEK, and uses that DEK to decrypt the file. Because the wrapped DEK travels with the document itself, there is no session state to keep alive between reads. His private key is the only thing that ever needs to be present.
 
 ## Why use it
 
@@ -244,7 +209,7 @@ Rather than Alice statically locking a secret for Bob, Alice and Bob’s cryptog
 
 ## The Paint-Mixing Analogy
 
-Think of it like mixing paint: Alice and Bob start with a shared public base color (Yellow). This base isn't unique to either of them—it is a global, standardized starting point that everyone on the network knows. They each mix in their own secret color locally and swap the resulting mixtures. By then adding their own secret color to the other person's mixture, they both arrive at the exact same final shade (Brown)—all without ever exposing their pure secret colors over the network.
+Think of it like mixing paint: Alice and Bob start with a shared public base color (Yellow). This base isn't unique to either of them. It is a global, standardized starting point that everyone on the network knows. They each mix in their own secret color locally and swap the resulting mixtures. By then adding their own secret color to the other person's mixture, they both arrive at the exact same final shade (Brown), all without ever exposing their pure secret colors over the network.
 
 <p align="center">
   <img src="/images/articles/end-to-end-encryption/key-agreement.png" alt="MVC Model"/>
@@ -256,15 +221,16 @@ An eavesdropper (Eve) only sees the public starting Yellow base and the intermed
 
 Here is how that color-mixing math maps to the actual system workflow:
 
-- **The Pre-requisite (The Public Base & Bob's Mix):** In cryptography, the global public base (Yellow) is called the _Generator Point_. Bob takes this base and mixes in his private key (Red), creating his public key (an Orange mixture). Alice fetches this verified Orange public key from a secure identity server. Because it is pre-verified, an active attacker cannot swap it out with a malicious key.
+- **The Pre-requisite (The Public Base & Bob's Mix):** In cryptography, the global public base (Yellow) is called the _Generator Point_. It isn't something Alice and Bob choose or negotiate: it is a fixed, publicly standardized constant defined by the elliptic curve itself (the P-256 curve specification ships its own Generator Point as part of its domain parameters). Every device implementing that curve starts from the exact same value. Bob takes this shared base and mixes in his private key (Red), creating his public key (an Orange mixture). Alice fetches this verified Orange public key from a secure identity server. Because it is pre-verified, an active attacker cannot swap it out with a malicious key.
 - **Data Encryption & Local Key Calculation (Alice's Mix):** Before anything is sent, Alice's device does the heavy lifting locally:
-  1. She generates a random, 32-byte Data Encryption Key (DEK) and uses it to encrypt the actual document payload.
-  2. She takes that same global public base (Yellow) and mixes in her own private key (Blue) to create her temporary public key (a Green mixture).
-  3. She applies her private key (Blue) to Bob’s public key (Orange). By combining them, she calculates the shared secret—the Key Encryption Key (KEK), which represents our final Brown shade.
-  4. She encrypts ("wraps") her random document DEK using that fresh Brown KEK.
+  1. She generates a random, 32-byte Data Encryption Key (DEK).
+  2. She uses that DEK to encrypt the actual document payload.
+  3. She takes that same global public base (Yellow) and mixes in her own private key (Blue) to create her temporary public key (a Green mixture).
+  4. She applies her private key (Blue) to Bob’s public key (Orange). By combining them, she calculates the shared secret: the Key Encryption Key (KEK), which represents our final Brown shade.
+  5. She encrypts ("wraps") the DEK from step 1 using that fresh Brown KEK.
 - **The Handshake (The Swap):** Alice bundles the encrypted document, the wrapped DEK, and her temporary public key (the Green mixture) into a package and transmits it over the network to Bob.
 - **The Convergence & Decryption (The Final Mix):** When Bob receives the package, his device completes the puzzle:
-  1. Bob applies his private key (Red) to Alice’s temporary public key (the Green mixture). Because the order of operations doesn't matter in elliptic curve geometry, adding Red to Green yields the exact same final coordinate—deriving the identical Brown KEK.
+  1. Bob applies his private key (Red) to Alice’s temporary public key (the Green mixture). Because the order of operations doesn't matter in elliptic curve geometry, adding Red to Green yields the exact same final coordinate, deriving the identical Brown KEK.
   2. Bob uses this KEK to decrypt the wrapped DEK.
   3. Bob uses the decrypted DEK to unpack and read the document payload.
 
@@ -290,9 +256,9 @@ sequenceDiagram
     Alice ->> Bob: Sends Package (Encrypted Document, Wrapped DEK, + A_pub [Green Mix])
 
     note over Alice, Bob: [The Convergence & Decryption]
-    Bob ->> Bob: 6. Calculates Shared Secret (KEK): B_priv [Red] x A_pub = KEK [Final Brown]
-    Bob ->> Bob: 7. Decrypts the DEK using the KEK
-    Bob ->> Bob: 8. Decrypts the Document payload using the DEK
+    Bob ->> Bob: 1. Calculates Shared Secret (KEK): B_priv [Red] x A_pub = KEK [Final Brown]
+    Bob ->> Bob: 2. Decrypts the DEK using the KEK
+    Bob ->> Bob: 3. Decrypts the Document payload using the DEK
 
     note over Alice, Bob: BOTH now possess the EXACT SAME KEK<br/>to unpack the document key.
 ```
@@ -305,14 +271,11 @@ To understand how this protects data over time, it helps to look at the relation
 - **The Key Envelope:** Alice uses the newly calculated KEK (the ECDH shared secret) to encrypt ("wrap") that 32-byte DEK.
 - **The Transfer:** The temporary ECDH keys exist solely to securely transport this DEK across the network.
 
-Once Bob’s device calculates the shared secret and uses it to decrypt the incoming DEK, his client browser saves that decrypted DEK directly into his local, non-extractable IndexedDB cache. The temporary session keys and the KEK are then permanently destroyed.
+Once Bob’s device calculates the shared secret and uses it to decrypt the incoming DEK, the temporary session key and the KEK are immediately discarded, they only ever existed to unwrap this one DEK.
 
 ## How to Decrypt the Data Later On
 
-Because the handshake keys are short-lived, the decryption process looks different depending on when Bob opens the document:
-
-- **Decrypting Today (First Time):** Bob's device performs the ECDH calculation using Alice's temporary public key and his own private key. He derives the KEK (our final Brown paint mixture), decrypts the incoming DEK, stores that DEK in his local cache, and uses it to decrypt the document.
-- **Decrypting Tomorrow (Historical View):** When Bob returns to read the historical document tomorrow, he bypasses the network handshake entirely. He does not need to recalculate the ECDH math or look for Alice's temporary public key. Instead, his browser fetches the document's specific DEK directly from his local IndexedDB cache and decrypts the file instantly.
+Bob's device repeats the same calculation every time he opens the document, whether that's moments after Alice shares it or months later: it reads Alice's ephemeral public key from the document's metadata, combines it with his own static private key to re-derive the KEK, and uses that KEK to unwrap the DEK before decrypting the payload. Because Alice's ephemeral public key travels with the document rather than existing only for a live session, Bob never needs to be online at the same time as Alice, and revisiting old data requires no new handshake, just his long-term private key.
 
 ## Why use it
 
@@ -345,7 +308,7 @@ Instead of forcing a live handshake, Bob's device pre-generates a bundle of temp
 
 When Bob logs back in days later, he downloads Alice's public key alongside the specific pre-key ID she used, performs the matching math, and immediately deletes the corresponding private pre-key from his device.
 
-Ultimately, choosing between RSA and ECDH is not just a math choice—it is an architectural design decision. For simple, offline-first document databases, Key Transport offers seamless usability out of the box. For high-security environments, real-time sync engines, or apps requiring strict compliance, implementing an asynchronous ECDH pre-key architecture is well worth the engineering complexity to guarantee absolute Forward Secrecy.
+Ultimately, choosing between RSA and ECDH is not just a math choice. It is an architectural design decision. For simple, offline-first document databases, Key Transport offers seamless usability out of the box. For high-security environments, real-time sync engines, or apps requiring strict compliance, implementing an asynchronous ECDH pre-key architecture is well worth the engineering complexity to guarantee absolute Forward Secrecy.
 
 # Implementing Asymmetric Key Architectures
 
@@ -490,7 +453,7 @@ async function downloadAndDecryptDocument(
     bobPrivateKey,
     { name: 'RSA-OAEP' },
     { name: 'AES-GCM', length: 256 },
-    true, // Allow the DEK to be extractable so it can be cached in IndexedDB for subsequent reads
+    false, // The DEK never needs to leave memory, so keep it non-extractable
     ['decrypt'], // Bob only needs decryption capabilities for this document
   );
 
@@ -667,7 +630,7 @@ async function downloadAndDecryptECDH(
     kek,
     { name: 'AES-KW' },
     { name: 'AES-GCM', length: 256 },
-    true, // Extractable so Bob can save it directly to IndexedDB cache for later
+    false, // The DEK never needs to leave memory, so keep it non-extractable
     ['decrypt'],
   );
 
