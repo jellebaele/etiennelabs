@@ -109,14 +109,14 @@ Every individual record requires its own random, unique Symmetric IV (Initializa
 
 | Record ID | Owner User ID                | Symmetric IV (Plaintext) | Encrypted Content (Ciphertext + Auth Tag) | Key Structure                            |
 | --------- | ---------------------------- | ------------------------ | ----------------------------------------- | ---------------------------------------- |
-| note_101  | user_alice_11d3f2a91b29a1... | aesgcm:3f82a...          | 92f1 (Opaque Blob)                        | Encrypted directly by Alice's Master Key |
-| note_102  | user_alice_118c11e0b244c1... | aesgcm:9c21b...          | 01ab (Opaque Blob)                        | Encrypted directly by Alice's Master Key |
+| note_101  | user_alice_11                | aesgcm:3f82a...          | 92f1 (Opaque Blob)                        | Encrypted directly by Alice's Master Key |
+| note_102  | user_alice_11                | aesgcm:9c21b...          | 01ab (Opaque Blob)                        | Encrypted directly by Alice's Master Key |
 
 **The Cryptographic Breaking Point:** If Alice wants to share `note_101` with Bob using this exact setup, she hits an architectural wall. To give him access, she would either have to expose her personal database key to him (compromising her entire vault) or endure the massive performance penalty of decrypting and re-encrypting heavy payloads from scratch using Bob's credentials.
 
 ## 2. Multi-User Collaborative Architecture
 
-In a collaborative system, we break that hard link between your password and the data. We strip the data encryption keys (DEKs) out of the user profile entirely. Instead, the profile holds an Asymmetric Mailbox (your Public/Private key pair). The data payloads are encrypted with their own independent, standalone keys (Group AES Keys), which live right inside the document rows, wrapped separately for each user who has permission to view them.
+In a collaborative system, we break that hard link between your password and the data. We strip the data encryption keys (DEKs) out of the user profile entirely. Instead, the profile holds an Asymmetric Mailbox (your Public/Private key pair). The data payloads are encrypted with their own independent, standalone DEKs, which live right inside the document rows, wrapped separately for each user who has permission to view them.
 
 ### User Profile Schema
 
@@ -405,7 +405,7 @@ async function encryptAndWrapForSelf(documentData: string, alicePublicKey: Crypt
 }
 ```
 
-## Scenario 2: Provisioning Access for a Coworker (Bob)
+#### Scenario 2: Provisioning Access for a Coworker (Bob)
 
 When Alice wants to share the document with Bob, she does not re-encrypt the large document payload. Instead, she pulls Bob's pre-verified RSA public key from the identity server and wraps the exact same DEK she generated in Scenario 1.
 
@@ -433,7 +433,7 @@ async function wrapKeyForRecipient(dek: CryptoKey, bobPublicKeyJwk: string): Pro
 }
 ```
 
-## Scenario 3: Retrieval and Decryption (Bob's Flow)
+#### Scenario 3: Retrieval and Decryption (Bob's Flow)
 
 When Bob logs in later, his client downloads the encrypted payload and the specific `wrappedDekForBob` envelope meant for him. His browser pulls his non-extractable private key out of IndexedDB to safely unwrap the DEK and read the document.
 
@@ -469,11 +469,11 @@ async function downloadAndDecryptDocument(
 }
 ```
 
-# Implementing Key Agreement (The ECDH Approach)
+## 2. Implementing Key Agreement (The ECDH Approach)
 
 To implement Key Agreement, we shift from RSA to ECDH (Elliptic Curve Diffie-Hellman). Instead of directly encrypting a key package for a specific user, both parties use their keys to compute a shared mathematical point on an elliptic curve. For modern web applications, ECDH paired with the P-256 or P-384 curve is the industry standard for fast, high-security secret derivation.
 
-## Key Initialization & Device Identity
+### Key Initialization & Device Identity
 
 Just like in the RSA approach, Bob must first generate a long-term identity key pair. He registers his public key (the Orange mixture) on the server while keeping his static private key (his secret color, Red) securely inside his client environment.
 
@@ -520,7 +520,7 @@ async function generateAndRegisterECDHKeys() {
 }
 ```
 
-## The Dynamic Handshake: Alice's Flow (Write Pipeline)
+### The Dynamic Handshake: Alice's Flow (Write Pipeline)
 
 When Alice wants to encrypt a document for Bob, she does not use a long-term key pair for the handshake. Instead, she creates a temporary, single-use ephemeral key pair (her secret color Blue and her public Green mixture).
 
@@ -588,7 +588,7 @@ async function encryptAndWrapForRecipientECDH(documentData: string, bobStaticPub
 }
 ```
 
-## The Convergence: Bob's Flow (Read Pipeline)
+### The Convergence: Bob's Flow (Read Pipeline)
 
 When Bob retrieves the package, his device reads Alice’s temporary public key (Green mixture) out of the metadata. He passes it, along with his long-term private key (Red), into the derivation engine. Thanks to elliptic curve geometry, this mirrors Alice's calculation perfectly, yielding the exact same Brown KEK required to unwrap the DEK.
 
@@ -666,7 +666,7 @@ While the core mechanics of Key Transport and Key Agreement provide rock-solid c
 
 # Conclusion
 
-End-to-end data protection is no longer an exotic feature reserved for specialized security tools—it is a baseline requirement for modern cloud collaboration.
+End-to-end data protection is no longer an exotic feature reserved for specialized security tools. It is a baseline requirement for modern cloud collaboration.
 
 Choosing between Key Transport (The RSA Approach) and Key Agreement (The ECDH Approach) ultimately comes down to your data topology and access models:
 
